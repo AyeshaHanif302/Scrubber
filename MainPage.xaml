@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Scrubber.MainPage"
+             BackgroundColor="White">
+
+    <NavigationPage.TitleView>
+        <StackLayout BackgroundColor="LightSeaGreen" />
+    </NavigationPage.TitleView>
+    
+    <ScrollView>
+
+        <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
+
+            <Image Source="datarovers_logo.jpg" BackgroundColor="AliceBlue" HeightRequest="100" WidthRequest="100" HorizontalOptions="Start" />
+
+            <Label Text="Scrubber" Margin="0,-85,0,0" FontAttributes="Bold" FontSize="50" HorizontalOptions="End" VerticalOptions="Start" TextColor="Black"/>
+
+            <StackLayout Padding="20"  Margin="0,80,0,0" HorizontalOptions="Start" >
+                <Entry x:Name="Browse" IsReadOnly="True" TextColor="Black" Placeholder="Select a File" HorizontalOptions="Start"  BackgroundColor="GhostWhite" WidthRequest="300"/>
+                <BoxView Color="DarkSlateGray" HeightRequest="1" HorizontalOptions="FillAndExpand"/>
+                <Button Text="Browse File" Clicked="BrowseFile_Clicked" Margin="0,-43,-120,20" BackgroundColor="LightSeaGreen" TextColor="Black" HorizontalOptions="End"/>
+            </StackLayout>
+
+            <StackLayout Padding="20" VerticalOptions="CenterAndExpand" >
+                <Entry x:Name="Destination" IsReadOnly="True" TextColor="Black" Placeholder="Selected a Folder" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="300"/>
+                <BoxView Color="DarkSlateGray" HeightRequest="1" HorizontalOptions="FillAndExpand"/>
+                <Button Text="Destination" Clicked="Destination_Clicked" Margin="0,-43,-120,20" BackgroundColor="LightSeaGreen" TextColor="Black" HorizontalOptions="End"/>
+            </StackLayout>
+
+            <StackLayout Padding="20" Orientation="Horizontal" HorizontalOptions="Center">
+                <Label Text="Select a file type:" FontSize="14" TextColor="Black"/>
+                <RadioButton x:Name="type835" GroupName="fileType" Value="835" CheckedChanged="OnRadioButtonChecked" Margin="10,-10,0,0"/>
+                <Label Text="835" FontSize="14" TextColor="Black"/>
+                <RadioButton x:Name="type837" GroupName="fileType" Value="837" CheckedChanged="OnRadioButtonChecked" Margin="10,-10,0,0"/>
+                <Label Text="837" FontSize="14" TextColor="Black"/>
+            </StackLayout>
+
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                <Button Text="Clear All" Clicked="Clear_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black" WidthRequest="90"/>
+                <Button x:Name="Next" Text="Next" Clicked="Next_Clicked" Margin="10" BackgroundColor="AliceBlue"  TextColor="Black"  WidthRequest="90"/>
+            </StackLayout>
+
+        </VerticalStackLayout>
+</ScrollView>
+
+</ContentPage>
