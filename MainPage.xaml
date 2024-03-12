@@ -2,17 +2,22 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Scrubber.MainPage"
-             BackgroundColor="White">
+             BackgroundColor="LightSeaGreen">
 
     <NavigationPage.TitleView>
-        <StackLayout BackgroundColor="LightSeaGreen" />
+        <StackLayout BackgroundColor="AliceBlue" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
+            <Image Source="drlogo.ico" HeightRequest="30" WidthRequest="30" HorizontalOptions="Start" Margin="10,0,0,0"/>
+            <Label Text="Datarovers Scrubber" TextColor="Black" Margin="10,0,0,0" HorizontalOptions="StartAndExpand" VerticalOptions="CenterAndExpand" />
+        </StackLayout>
     </NavigationPage.TitleView>
-    
-    <ScrollView>
+
+    <Frame BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="20">
+
+        <ScrollView>
 
         <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
 
-            <Image Source="datarovers_logo.jpg" BackgroundColor="AliceBlue" HeightRequest="100" WidthRequest="100" HorizontalOptions="Start" />
+            <Image Source="drlogo.ico" HeightRequest="100" WidthRequest="100" HorizontalOptions="Start" />
 
             <Label Text="Scrubber" Margin="0,-85,0,0" FontAttributes="Bold" FontSize="50" HorizontalOptions="End" VerticalOptions="Start" TextColor="Black"/>
 
@@ -37,11 +42,11 @@
             </StackLayout>
 
             <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                <Button Text="Clear All" Clicked="Clear_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black" WidthRequest="90"/>
-                <Button x:Name="Next" Text="Next" Clicked="Next_Clicked" Margin="10" BackgroundColor="AliceBlue"  TextColor="Black"  WidthRequest="90"/>
+                    <Button Text="Clear All" Clicked="Clear_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black" WidthRequest="90"/>
+                    <Button x:Name="Next" Text="Next" Clicked="Next_Clicked" Margin="10" BackgroundColor="LightGray"  TextColor="Black"  WidthRequest="90"/>
             </StackLayout>
 
         </VerticalStackLayout>
 </ScrollView>
-
+</Frame>
 </ContentPage>

@@ -2,16 +2,26 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Scrubber.File835Page"
-             Title="File835Page"
-             BackgroundColor="White">
-    
-    <ScrollView>
-        <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
+             BackgroundColor="LightSeaGreen">
+
+    <NavigationPage.TitleView>
+        <StackLayout BackgroundColor="AliceBlue" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
+            <Image Source="drlogo.ico" HeightRequest="30" WidthRequest="30" HorizontalOptions="Start" Margin="10,0,0,0"/>
+            <Label Text="File 835" TextColor="Black" Margin="10,0,0,0" HorizontalOptions="StartAndExpand" VerticalOptions="CenterAndExpand" />
+        </StackLayout>
+    </NavigationPage.TitleView>
+
+    <Frame BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="20">
+
+        <ScrollView>
+        
+            <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
 
             <Grid Grid.Row="0">
-                <Image Source="datarovers_logo.jpg" Margin="0,-15,350,0"  Grid.Column="0" HeightRequest="100" WidthRequest="100" />
+                <Image Source="drlogo.ico" Margin="0,-15,350,0"  Grid.Column="0" HeightRequest="100" WidthRequest="100" />
                 <Label Text="Scrubber" Grid.Column="1" FontAttributes="Bold" HorizontalOptions="CenterAndExpand" FontSize="50" TextColor="Black"/>
             </Grid>
+                
             <Label Text="Select All" TextColor="Black" Margin="380,10,0,0" />
             <CheckBox x:Name="selectAll" Color="LightSeaGreen" Margin="445,-32,0,0" CheckedChanged="SelectAllCheckedChanged"  Scale="0.8"/>
 
@@ -60,9 +70,9 @@
 
             <StackLayout Orientation="Horizontal" Padding="0" HorizontalOptions="Start" Grid.Row="1" Grid.Column="0">
                 <Label Text="Selected File:"  Margin="55,0,10,0" FontSize="13" HorizontalOptions="Center" TextColor="Black"/>
-                <Entry x:Name="Selectedfile" IsReadOnly="True" Margin="0,-10,10,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="AliceBlue"  WidthRequest="200" HeightRequest="10"/>
+                <Entry x:Name="Selectedfile" IsReadOnly="True" Margin="0,-10,10,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="white"  WidthRequest="200" HeightRequest="10"/>
                 <Label Text="Selected Path:"  FontSize="13" HorizontalOptions="Center" TextColor="Black"  Margin="30,0,0,0"/>
-                <Entry x:Name="Selectedlocation" IsReadOnly="True" Margin="10,-10,10,0" Grid.Column="1" TextColor="Black" HorizontalOptions="Start" BackgroundColor="AliceBlue" WidthRequest="300" HeightRequest="10"/>
+                <Entry x:Name="Selectedlocation" IsReadOnly="True" Margin="10,-10,10,0" Grid.Column="1" TextColor="Black" HorizontalOptions="Start" BackgroundColor="White" WidthRequest="300" HeightRequest="10"/>
             </StackLayout>
 
             <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Padding="25">
@@ -74,4 +84,5 @@
 
         </VerticalStackLayout>
     </ScrollView>
+</Frame>
 </ContentPage>
