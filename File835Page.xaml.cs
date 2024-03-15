@@ -527,16 +527,17 @@ public partial class File835Page : ContentPage
                 EncryptedBytes = await DecryptFile(EncryptedBytes);
                 isEncrypted = false;
 
-                await Shell.Current.DisplayAlert("Info", "File Decrypted", "Ok");
+                await DisplayAlert("Info", "File Decrypted", "Ok");
+
             }
             else
             {
-                await Shell.Current.DisplayAlert("Info", "No file selected to decrypt", "Ok");
+                await DisplayAlert("Info", "No file selected to decrypt", "Ok");
             }
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Error", ex.Message, "Ok");
+            await DisplayAlert("Error", ex.Message, "Ok");
         }
     }
     private async Task<byte[]> DecryptFile(byte[] encryptedBytes)
