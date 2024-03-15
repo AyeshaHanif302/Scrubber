@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui.Storage;
 using Microsoft.Maui;
+using System.Security.Cryptography;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Scrubber
@@ -9,6 +10,7 @@ namespace Scrubber
         private byte[] EncryptedBytes;
         private bool isType835Checked = false;
         private bool isType837Checked = false;
+
         public MainPage()
         {
             InitializeComponent();
@@ -17,6 +19,38 @@ namespace Scrubber
             Browse.TextChanged += OnEntryTextChanged;
             Destination.TextChanged += OnEntryTextChanged;
         }
+        //Generate Key
+        private byte[] GenerateRandomKey()
+        {
+            byte[] key = new byte[32]; // 256 bits
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(key);
+            }
+            return key;
+        }
+        private byte[] GenerateRandomIV()
+        {
+            byte[] iv = new byte[16]; // 128 bits
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(iv);
+            }
+            return iv;
+        }
+        private void GenerateKey_Click(object sender, EventArgs e)
+        {
+            byte[] generatedKey = GenerateRandomKey();
+            string keyString = BitConverter.ToString(generatedKey).Replace("-", "");
+            keyTextBox.Text = keyString;
+
+            byte[] generatedIV = GenerateRandomIV();
+            string ivString = BitConverter.ToString(generatedIV).Replace("-", "");
+            ivTextBox.Text = ivString;
+
+            generateKeyButton.IsEnabled = false;
+        }
+       
 
         private void OnEntryTextChanged(object sender, TextChangedEventArgs e)
         {
@@ -72,7 +106,7 @@ namespace Scrubber
         {
             if (isType835Checked)
             {
-                await Navigation.PushAsync(new File835Page(App.SelectedFile, EncryptedBytes, App.SelectedFolderPath));
+                await Navigation.PushAsync(new File835Page(App.SelectedFile, EncryptedBytes, App.SelectedFolderPath, keyTextBox.Text, ivTextBox.Text));
             }
             else if (isType837Checked)
             {

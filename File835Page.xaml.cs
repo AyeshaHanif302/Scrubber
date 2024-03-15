@@ -1,5 +1,7 @@
+using Microsoft.Maui.Controls.Shapes;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Scrubber;
 
@@ -10,34 +12,27 @@ public partial class File835Page : ContentPage
     private bool isEncrypted = false;
     private byte[] key;
     private byte[] iv;
-    public File835Page(string SelectedFile, byte[] encryptedBytes, string SelectedFolderPath)
+    public File835Page(string SelectedFile, byte[] encryptedBytes, string SelectedFolderPath, string keyString, string ivString)
 	{
 		InitializeComponent();
-        key = GenerateRandomKey();
-        iv = GenerateRandomIV();
+        key = ParseHexString(keyString);
+        iv = ParseHexString(ivString);
         Selectedfile.Text = SelectedFile;
         Selectedlocation.Text = SelectedFolderPath;
         EncryptedBytes = encryptedBytes;
     }
 
-    //Generate KEY
-    private byte[] GenerateRandomKey()
+    // Method to parse hex string into byte array
+    private byte[] ParseHexString(string hexString)
     {
-        byte[] key = new byte[32]; // 256 bits
-        using (var rng = new RNGCryptoServiceProvider())
+        hexString = hexString.Replace("-", ""); // Remove dashes if present
+        int length = hexString.Length;
+        byte[] bytes = new byte[length / 2];
+        for (int i = 0; i < length; i += 2)
         {
-            rng.GetBytes(key);
+            bytes[i / 2] = Convert.ToByte(hexString.Substring(i, 2), 16);
         }
-        return key;
-    }
-    private byte[] GenerateRandomIV()
-    {
-        byte[] iv = new byte[16]; // 128 bits
-        using (var rng = new RNGCryptoServiceProvider())
-        {
-            rng.GetBytes(iv);
-        }
-        return iv;
+        return bytes;
     }
 
     //Encrypt file
@@ -47,7 +42,7 @@ public partial class File835Page : ContentPage
         {
             if (EncryptedBytes != null && EncryptedBytes.Length > 0)
             {
-                EncryptedBytes = EncryptFile(EncryptedBytes);
+                EncryptedBytes = await EncryptFiles(EncryptedBytes);
                 isEncrypted = true;
 
                 await DisplayAlert("Info", "File Encrypted", "Ok");
@@ -63,58 +58,6 @@ public partial class File835Page : ContentPage
             await DisplayAlert("Error", ex.Message, "Ok");
         }
     }
-    private byte[] EncryptFile(byte[] fileBytes)
-    {
-        try
-        {
-            // Split the file content into lines
-            string fileContent = Encoding.UTF8.GetString(fileBytes);
-            string[] lines = fileContent.Split('\n');
-
-            // Encrypt each line independently
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string[] parts = lines[i].Split(':');
-
-                // Use a StringBuilder to build the encrypted line
-                StringBuilder encryptedLine = new StringBuilder(parts[0]); // Append the first part (before the first ':')
-
-                // Check if the column is in the list of selected columns
-                if (selectedColumns.Contains(parts[0].Trim()))
-                {
-                    // Ensure that there are at least two parts for each column
-                    if (parts.Length >= 2)
-                    {
-                        // Extract the text after ':' and encrypt it
-                        string textToEncrypt = parts[1];
-                        byte[] encryptedTextBytes = EncryptText(Encoding.UTF8.GetBytes(textToEncrypt));
-
-                        // Append the encrypted text to the StringBuilder
-                        encryptedLine.Append(':').Append(Convert.ToBase64String(encryptedTextBytes));
-                    }
-                }
-                else
-                {
-                    // Append the unchanged part to the StringBuilder
-                    encryptedLine.Append(':').Append(parts[1]);
-                }
-
-                // Join the parts back into a single string
-                lines[i] = encryptedLine.ToString();
-            }
-
-            // Join the lines back into a single string
-            string encryptedContent = string.Join("\n", lines);
-
-            return Encoding.UTF8.GetBytes(encryptedContent);
-        }
-        catch (Exception ex)
-        {
-            // Log or output the error details
-            Console.WriteLine("Error during file encryption: " + ex.Message);
-            return null;
-        }
-    }
     private byte[] EncryptText(byte[] textBytes)
     {
         try
@@ -123,7 +66,7 @@ public partial class File835Page : ContentPage
             {
                 aesAlg.Key = key;
                 aesAlg.IV = iv;
-                aesAlg.Padding = PaddingMode.ISO10126; // Use ZeroPadding
+                aesAlg.Padding = PaddingMode.ISO10126;
 
                 using (MemoryStream msEncrypt = new MemoryStream())
                 {
@@ -132,6 +75,7 @@ public partial class File835Page : ContentPage
                         csEncrypt.Write(textBytes, 0, textBytes.Length);
                     }
                     return msEncrypt.ToArray();
+
                 }
             }
         }
@@ -142,14 +86,445 @@ public partial class File835Page : ContentPage
         }
     }
 
-    // Decrypt file
+    private async Task<byte[]> EncryptFiles(byte[] fileBytes)
+    {
+        try
+        {
+            string fileContent = Encoding.UTF8.GetString(fileBytes);
+            var message = string.Empty;
+            var finalLines = new List<string>();
+            var processedFiles = new List<byte[]>();
+
+            string[] lines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+            foreach (var currentLine in lines)
+            {
+                await Task.Delay(50);
+                finalLines.Clear();
+
+                //var fileData = await File.ReadAllTextAsync($"{Selectedfile}\\{currentLine}");
+
+                var fileData = fileContent;
+
+                fileData = fileData.Replace("\r", string.Empty).Replace("\n", string.Empty);
+
+                if (fileData.Length > 105)
+                {
+                    var records = new List<string>();
+
+                    var elSeparator = fileData.Substring(3, 1); // Element Separator
+                    var cpSeparator = fileData.Substring(104, 1);// Component Separator
+                    var sgSeparator = fileData.Substring(105, 1); //Segment Separator
+
+                    foreach (Match m in Regex.Matches(fileData, $"ST\\{elSeparator}835(.*?)\\{sgSeparator}SE\\{elSeparator}(.*?)\\{sgSeparator}"))
+                    {
+                        records.Add(m.Groups[0].Value);
+                    }
+
+                    var fileType = string.Empty;
+
+                    //835 file
+                    if (fileData.Contains($"ST{elSeparator}835{elSeparator}"))
+                        fileType = "835";
+
+                    if (records.Count > 0 && !string.IsNullOrWhiteSpace(fileType))
+                    {
+                        var allLines = fileData.Split(sgSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                        var newLine = string.Empty;
+
+                        finalLines.Add($"{allLines[0]}{sgSeparator}");
+                        finalLines.Add($"{allLines[1]}{sgSeparator}");
+
+                        foreach (var record in records)
+                        {
+                            var recordLines = record.Split(sgSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
+                            var loopId = string.Empty;
+
+                            if (fileType == "835")
+                            {
+                                foreach (var line in recordLines)
+                                {
+                                    var values = line.Split(elSeparator).ToList();
+
+                                    if (line.StartsWith($"N1{elSeparator}") && line.Contains($"{elSeparator}PR{elSeparator}"))
+                                    {
+                                        loopId = "1000A";
+
+                                        if (payerName835.IsChecked)
+                                        {
+                                            newLine = string.Empty;
+
+                                            foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                            {                                               
+                                                switch (item.index)
+                                                {
+                                                    case 0:
+                                                        newLine = item.value;
+                                                        break;
+                                                    case 2:
+                                                        byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        byte[] encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        break;
+                                                    default:
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                        break;
+                                                }
+                                            }
+
+                                            finalLines.Add($"{newLine}{sgSeparator}");
+                                        }
+                                        else
+                                            finalLines.Add($"{line}{sgSeparator}");
+
+                                        //string combinedLines = string.Join(Environment.NewLine, finalLines);
+                                        //return Encoding.UTF8.GetBytes(combinedLines);
+                                    }
+                                    else if (line.StartsWith($"N3{elSeparator}") && loopId == "1000A" && payerAddress835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 1:
+                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                    byte[] encryptedBytes = EncryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"N4{elSeparator}") && loopId == "1000A" && payerAddress835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 1:
+                                                case 2:
+                                                case 3:
+                                                case 4:
+                                                case 7:
+                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                    byte[] encryptedBytes = EncryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"CLP{elSeparator}"))
+                                    {
+                                        loopId = "2100";
+                                        finalLines.Add($"{line}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}QC{elSeparator}") && loopId == "2100")
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] encryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && patientname835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && patientpolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}IL{elSeparator}") && loopId == "2100" )
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] encryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && subscriberName835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && subscriberPolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}74{elSeparator}") && loopId == "2100")
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] encryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && correctedInsuredName835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && correctedInsuredPolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}82{elSeparator}") && loopId == "2100")
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] encryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && renderingProviderName835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && renderingProviderPolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                        encryptedBytes = EncryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"REF{elSeparator}") && line.Contains($"{elSeparator}EA{elSeparator}") && loopId == "2100" && medicalRecordNo835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 2:
+                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                    byte[] encryptedBytes = EncryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"SVC{elSeparator}"))
+                                    {
+                                        loopId = "2110";
+                                        finalLines.Add($"{line}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"REF{elSeparator}") && line.Contains($"{elSeparator}6R{elSeparator}") && loopId == "2110" && serviceLineItemControlNo835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 2:
+                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
+                                                    byte[] encryptedBytes = EncryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else
+                                        finalLines.Add($"{line}{sgSeparator}");
+                                }
+                            }
+                        }
+
+                        finalLines.Add($"{allLines[allLines.Count - 2]}{sgSeparator}");
+                        finalLines.Add($"{allLines[allLines.Count - 1]}{sgSeparator}");
+                    }
+                    else
+                        message = message + $"File {currentLine} have inavlid/unsupported data.\n";
+                }
+                else
+                    message = message + $"File {currentLine} has invalid length.\n";
+
+                if (finalLines.Count > 0)
+                {
+                    // Write encrypted content to file
+                    string combinedLines = string.Join(Environment.NewLine, finalLines);
+                    byte[] combinedBytesToFile = Encoding.UTF8.GetBytes(combinedLines);
+
+                    // Return the combined content of all processed files
+                    return combinedBytesToFile;
+                }
+
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error during file encryption: " + ex.Message);
+            return null;
+        }
+    }
+
+    //Decrypt file
     private async void Decrypt_Clicked(object sender, EventArgs e)
     {
         try
         {
             if (EncryptedBytes != null && EncryptedBytes.Length > 0)
             {
-                EncryptedBytes = DecryptFile(EncryptedBytes);
+                EncryptedBytes = await DecryptFile(EncryptedBytes);
                 isEncrypted = false;
 
                 await Shell.Current.DisplayAlert("Info", "File Decrypted", "Ok");
@@ -164,57 +539,433 @@ public partial class File835Page : ContentPage
             await Shell.Current.DisplayAlert("Error", ex.Message, "Ok");
         }
     }
-    private byte[] DecryptFile(byte[] encryptedBytes)
+    private async Task<byte[]> DecryptFile(byte[] encryptedBytes)
     {
         try
         {
-            // Convert the encrypted content to string
-            string encryptedContent = Encoding.UTF8.GetString(encryptedBytes);
+            string fileContent = Encoding.UTF8.GetString(encryptedBytes);
+            var message = string.Empty;
+            var finalLines = new List<string>();
+            var processedFiles = new List<byte[]>();
 
-            // Split the file content into lines
-            string[] lines = encryptedContent.Split('\n');
+            string[] lines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-            // Decrypt each line independently
-            for (int i = 0; i < lines.Length; i++)
+            foreach (var currentLine in lines)
             {
-                string[] parts = lines[i].Split(':');
+                await Task.Delay(50);
+                finalLines.Clear();
 
-                // Use a StringBuilder to build the decrypted line
-                StringBuilder decryptedLine = new StringBuilder(parts[0]); // Append the first part (before the first ':')
+                //var fileData = await File.ReadAllTextAsync($"{Selectedfile}\\{currentLine}");
 
-                // Check if the column is in the list of selected columns
-                if (selectedColumns.Contains(parts[0].Trim()))
+                var fileData = fileContent;
+
+                fileData = fileData.Replace("\r", string.Empty).Replace("\n", string.Empty);
+
+                if (fileData.Length > 105)
                 {
-                    // Ensure that there are at least two parts for each column
-                    if (parts.Length >= 2)
-                    {
-                        // Extract the encrypted text after ':' and decrypt it
-                        string encryptedText = parts[1];
-                        byte[] decryptedTextBytes = DecryptText(Convert.FromBase64String(encryptedText));
+                    var records = new List<string>();
 
-                        // Append the decrypted text to the StringBuilder
-                        decryptedLine.Append(':').Append(Encoding.UTF8.GetString(decryptedTextBytes));
+                    var elSeparator = fileData.Substring(3, 1); // Element Separator
+                    var cpSeparator = fileData.Substring(104, 1);// Component Separator
+                    var sgSeparator = fileData.Substring(105, 1); //Segment Separator
+
+                    foreach (Match m in Regex.Matches(fileData, $"ST\\{elSeparator}835(.*?)\\{sgSeparator}SE\\{elSeparator}(.*?)\\{sgSeparator}"))
+                    {
+                        records.Add(m.Groups[0].Value);
                     }
+
+                    var fileType = string.Empty;
+
+                    //835 file
+                    if (fileData.Contains($"ST{elSeparator}835{elSeparator}"))
+                        fileType = "835";
+
+                    if (records.Count > 0 && !string.IsNullOrWhiteSpace(fileType))
+                    {
+                        var allLines = fileData.Split(sgSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                        var newLine = string.Empty;
+
+                        finalLines.Add($"{allLines[0]}{sgSeparator}");
+                        finalLines.Add($"{allLines[1]}{sgSeparator}");
+
+                        foreach (var record in records)
+                        {
+                            var recordLines = record.Split(sgSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
+                            var loopId = string.Empty;
+
+                            if (fileType == "835")
+                            {
+                                foreach (var line in recordLines)
+                                {
+                                    var values = line.Split(elSeparator).ToList();
+
+                                    if (line.StartsWith($"N1{elSeparator}") && line.Contains($"{elSeparator}PR{elSeparator}"))
+                                    {
+                                        loopId = "1000A";
+
+                                        if (payerName835.IsChecked)
+                                        {
+                                            newLine = string.Empty;
+
+                                            foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                            {
+                                                switch (item.index)
+                                                {
+                                                    case 0:
+                                                        newLine = item.value;
+                                                        break;
+                                                    case 2:
+                                                        byte[] valueBytes = Convert.FromBase64String(item.value); 
+                                                        byte[] decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        break;
+                                                    default:
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                        break;
+                                                }
+                                            }
+
+                                            finalLines.Add($"{newLine}{sgSeparator}");
+                                        }
+                                        else
+                                            finalLines.Add($"{line}{sgSeparator}");
+
+                                        //string combinedLines = string.Join(Environment.NewLine, finalLines);
+                                        //return Encoding.UTF8.GetBytes(combinedLines);
+                                    }
+                                    else if (line.StartsWith($"N3{elSeparator}") && loopId == "1000A" && payerAddress835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 1:
+                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
+                                                    byte[] decryptedBytes = DecryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"N4{elSeparator}") && loopId == "1000A" && payerAddress835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 1:
+                                                case 2:
+                                                case 3:
+                                                case 4:
+                                                case 7:
+                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
+                                                    byte[] decryptedBytes = DecryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"CLP{elSeparator}"))
+                                    {
+                                        loopId = "2100";
+                                        finalLines.Add($"{line}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}QC{elSeparator}") && loopId == "2100")
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] decryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && patientname835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && patientpolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}IL{elSeparator}") && loopId == "2100")
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] decryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && subscriberName835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && subscriberPolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}74{elSeparator}") && loopId == "2100" )
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] decryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && correctedInsuredName835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && correctedInsuredPolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}82{elSeparator}") && loopId == "2100")
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            byte[] valueBytes = null;
+                                            byte[] decryptedBytes = null;
+
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 3:
+                                                case 4:
+                                                case 5:
+                                                    if (item.value != null && item.value.Length > 0 && renderingProviderName835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (item.value != null && item.value.Length > 0 && renderingProviderPolicyId835.IsChecked)
+                                                    {
+                                                        valueBytes = Convert.FromBase64String(item.value);
+                                                        decryptedBytes = DecryptText(valueBytes);
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    }
+                                                    else
+                                                    {
+                                                        newLine += $"{elSeparator}{item.value}";
+                                                    }
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"REF{elSeparator}") && line.Contains($"{elSeparator}EA{elSeparator}") && loopId == "2100" && medicalRecordNo835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 2:
+                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
+                                                    byte[] decryptedBytes = DecryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"SVC{elSeparator}"))
+                                    {
+                                        loopId = "2110";
+                                        finalLines.Add($"{line}{sgSeparator}");
+                                    }
+                                    else if (line.StartsWith($"REF{elSeparator}") && line.Contains($"{elSeparator}6R{elSeparator}") && loopId == "2110" && serviceLineItemControlNo835.IsChecked)
+                                    {
+                                        newLine = string.Empty;
+
+                                        foreach (var item in values.Select((value, index) => new { value = value, index }))
+                                        {
+                                            switch (item.index)
+                                            {
+                                                case 0:
+                                                    newLine = item.value;
+                                                    break;
+                                                case 2:
+                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
+                                                    byte[] decryptedBytes = DecryptText(valueBytes);
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    break;
+                                                default:
+                                                    newLine += $"{elSeparator}{item.value}";
+                                                    break;
+                                            }
+                                        }
+
+                                        finalLines.Add($"{newLine}{sgSeparator}");
+                                    }
+                                    else
+                                        finalLines.Add($"{line}{sgSeparator}");
+                                }
+                            }
+                        }
+
+                        finalLines.Add($"{allLines[allLines.Count - 2]}{sgSeparator}");
+                        finalLines.Add($"{allLines[allLines.Count - 1]}{sgSeparator}");
+                    }
+                    else
+                        message = message + $"File {currentLine} have inavlid/unsupported data.\n";
                 }
                 else
+                    message = message + $"File {currentLine} has invalid length.\n";
+
+                if (finalLines.Count > 0)
                 {
-                    // Append the unchanged part to the StringBuilder
-                    decryptedLine.Append(':').Append(parts[1]);
+                    // Write encrypted content to file
+                    string combinedLines = string.Join(Environment.NewLine, finalLines);
+                    byte[] combinedBytesToFile = Encoding.UTF8.GetBytes(combinedLines);
+
+                    // Return the combined content of all processed files
+                    return combinedBytesToFile;
                 }
 
-                // Join the parts back into a single string
-                lines[i] = decryptedLine.ToString();
             }
-
-            // Join the lines back into a single string
-            string decryptedContent = string.Join("\n", lines);
-
-            return Encoding.UTF8.GetBytes(decryptedContent);
+            return null;
         }
         catch (Exception ex)
         {
-            // Log or output the error details
-            Console.WriteLine("Error during file decryption: " + ex.Message);
+            Console.WriteLine("Error during file encryption: " + ex.Message);
             return null;
         }
     }
@@ -226,7 +977,7 @@ public partial class File835Page : ContentPage
             {
                 aesAlg.Key = key;
                 aesAlg.IV = iv;
-                aesAlg.Padding = PaddingMode.ISO10126; // Use ZeroPadding
+                aesAlg.Padding = PaddingMode.ISO10126;
 
                 using (MemoryStream msDecrypt = new MemoryStream())
                 {
@@ -269,7 +1020,7 @@ public partial class File835Page : ContentPage
                 if (!(string.IsNullOrWhiteSpace(Selectedfile.Text)) && !(string.IsNullOrWhiteSpace(Selectedlocation.Text)))
                 {
                     var fileName = string.IsNullOrWhiteSpace(Selectedfile.Text) ? "defaultFileName" : Selectedfile.Text;
-                    var filePath = Path.Combine(Selectedlocation.Text, fileName);
+                    var filePath = System.IO.Path.Combine(Selectedlocation.Text, fileName);
 
                     File.WriteAllBytes(filePath, fileBytesForDownload);
 
@@ -314,7 +1065,7 @@ public partial class File835Page : ContentPage
     {
         List<CheckBox> checkboxes835 = new List<CheckBox>
         {
-            name835, policyId835, subscriberName835, subscriberPolicyId835,payerName835,
+            patientname835, patientpolicyId835, subscriberName835, subscriberPolicyId835,payerName835,
             payerAddress835, medicalRecordNo835,correctedInsuredName835,
             correctedInsuredPolicyId835,renderingProviderName835,
             renderingProviderPolicyId835,serviceLineItemControlNo835
@@ -330,7 +1081,7 @@ public partial class File835Page : ContentPage
         List<CheckBox> checkboxes = new List<CheckBox>
         {
             selectAll,
-            name835, policyId835, subscriberName835, subscriberPolicyId835,payerName835, 
+            patientname835, patientpolicyId835, subscriberName835, subscriberPolicyId835,payerName835, 
             payerAddress835, medicalRecordNo835,correctedInsuredName835, 
             correctedInsuredPolicyId835,renderingProviderName835, 
             renderingProviderPolicyId835,serviceLineItemControlNo835
