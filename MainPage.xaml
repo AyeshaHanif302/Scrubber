@@ -17,9 +17,9 @@
 
         <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
 
-                <Image Source="drlogo.ico" Margin="100,0,0,0" HeightRequest="100" WidthRequest="100" HorizontalOptions="Start" />
+            <Image Source="drlogo.ico" Margin="50,0,0,0" HeightRequest="100" WidthRequest="100" HorizontalOptions="Start" />
 
-            <Label Text="Scrubber" Margin="0,-85,0,0" FontAttributes="Bold" FontSize="50" HorizontalOptions="Center" VerticalOptions="Start" TextColor="Black"/>
+            <Label Text="Scrubber" Margin="60,-85,0,0" FontAttributes="Bold" FontSize="50" HorizontalOptions="Center" VerticalOptions="Start" TextColor="Black"/>
 
             <StackLayout Padding="0"  Margin="0,70,0,0" HorizontalOptions="Center" >
                 <Entry x:Name="Browse" IsReadOnly="True" TextColor="Black" Placeholder="Select a File" HorizontalOptions="Start"  BackgroundColor="GhostWhite" WidthRequest="500"/>
@@ -41,25 +41,8 @@
                 <Label Text="837" FontSize="14" TextColor="Black"/>
             </StackLayout>
 
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Start" Padding="10">
-                <Label Text="Generated Key:" FontSize="13" HorizontalOptions="Center" TextColor="Black"  Margin="-30,0,10,0"/>
-                <Entry x:Name="keyTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="600"/>
-            </StackLayout>
-
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Start" Padding="10">
-                <Label Text="Generated IV:" FontSize="13" HorizontalOptions="Center" TextColor="Black"  Margin="-30,0,10,0"/>
-                <Entry x:Name="ivTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="600"/>
-            </StackLayout>
-            
             <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                    <Button x:Name="generateKeyButton"  Text="Generate Key" Margin="10" Clicked="GenerateKey_Click" BackgroundColor="LightSeaGreen" TextColor="Black">
-                        <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding Source={x:Reference generateKeyButton}, Path=IsEnabled}" Value="False">
-                                <Setter Property="BackgroundColor" Value="LightGray"/>
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
-                    <Button Text="Clear All" Clicked="Clear_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black" WidthRequest="90"/>
+                <Button Text="Clear All" Clicked="Clear_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black" WidthRequest="90"/>
                 <Button x:Name="Next" Text="Next" Clicked="Next_Clicked" Margin="10" BackgroundColor="LightGray"  TextColor="Black"  WidthRequest="90"/>
             </StackLayout>
 

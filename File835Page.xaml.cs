@@ -12,13 +12,15 @@ public partial class File835Page : ContentPage
     private bool isEncrypted = false;
     private byte[] key;
     private byte[] iv;
-    public File835Page(string SelectedFile, byte[] encryptedBytes, string SelectedFolderPath, string keyString, string ivString)
+    private string SelectedFile;
+    private string SelectedFolderPath;
+    public File835Page(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, string keyString, string ivString)
 	{
 		InitializeComponent();
         key = ParseHexString(keyString);
         iv = ParseHexString(ivString);
-        Selectedfile.Text = SelectedFile;
-        Selectedlocation.Text = SelectedFolderPath;
+        SelectedFile = selectedFile;
+        SelectedFolderPath = selectedFolderPath;
         EncryptedBytes = encryptedBytes;
     }
 
@@ -1018,10 +1020,10 @@ public partial class File835Page : ContentPage
 
             if (fileBytesForDownload != null && fileBytesForDownload.Length > 0)
             {
-                if (!(string.IsNullOrWhiteSpace(Selectedfile.Text)) && !(string.IsNullOrWhiteSpace(Selectedlocation.Text)))
+                if (!(string.IsNullOrWhiteSpace(SelectedFile)) && !(string.IsNullOrWhiteSpace(SelectedFolderPath)))
                 {
-                    var fileName = string.IsNullOrWhiteSpace(Selectedfile.Text) ? "defaultFileName" : Selectedfile.Text;
-                    var filePath = System.IO.Path.Combine(Selectedlocation.Text, fileName);
+                    var fileName = string.IsNullOrWhiteSpace(SelectedFile) ? "defaultFileName" : SelectedFile;
+                    var filePath = System.IO.Path.Combine(SelectedFolderPath, fileName);
 
                     File.WriteAllBytes(filePath, fileBytesForDownload);
 

@@ -18,12 +18,12 @@
             <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
 
                 <Grid Grid.Row="0">
-                    <Image Source="drlogo.ico" Margin="0,-15,350,0"  Grid.Column="0" HeightRequest="100" WidthRequest="100" />
-                    <Label Text="Scrubber" Grid.Column="1" FontAttributes="Bold" HorizontalOptions="CenterAndExpand" FontSize="50" TextColor="Black"/>
+                    <Image Source="drlogo.ico" Margin="0,0,250,0"  Grid.Column="0" HorizontalOptions="Center" HeightRequest="80" WidthRequest="80" />
+                    <Label Text="Scrubber" Margin="100,5,0,0" Grid.Column="1" FontAttributes="Bold" HorizontalOptions="Center" FontSize="50" TextColor="Black"/>
                 </Grid>
 
-                    <Label Text="Select All" TextColor="Black" Margin="0,10,0,0"  HorizontalOptions="Center"/>
-                    <CheckBox x:Name="selectAll" Color="LightSeaGreen" Margin="140,-32,0,0" CheckedChanged="SelectAllCheckedChanged"  Scale="0.8"  HorizontalOptions="Center"/>
+                    <Label Text="Select All" TextColor="Black" Margin="0,10,70,0"  HorizontalOptions="End"/>
+                    <CheckBox x:Name="selectAll" Color="LightSeaGreen" Margin="0,-32,22,0" CheckedChanged="SelectAllCheckedChanged"  Scale="0.8"  HorizontalOptions="End"/>
 
                 <Grid>
                     <Grid.RowDefinitions>
@@ -67,23 +67,6 @@
                     </StackLayout>
 
                 </Grid>
-
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                    <Label Text="Selected File:" FontAttributes="Bold" Margin="-50,0,10,0" FontSize="13" HorizontalOptions="Center" TextColor="Black"/>
-                        <Entry x:Name="Selectedfile" IsReadOnly="True" Margin="0,-10,10,0" TextColor="Black" HorizontalOptions="Start" WidthRequest="200" BackgroundColor="white" />
-                    <Label Text="Selected Path:" FontAttributes="Bold" FontSize="13" HorizontalOptions="Center" TextColor="Black" Margin="0,0,0,0"/>
-                    <Entry x:Name="Selectedlocation" IsReadOnly="True" Margin="10,-10,10,0" Grid.Column="1" TextColor="Black" WidthRequest="450" HorizontalOptions="Start" BackgroundColor="White" />
-                </StackLayout>
-
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Start" Padding="20">
-                    <Label Text="Generated Key:" FontAttributes="Bold" FontSize="13" HorizontalOptions="Center" TextColor="Black"  Margin="-30,0,10,0"/>
-                    <Entry x:Name="keyTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="white" WidthRequest="600"/>
-                </StackLayout>
-                    
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Start" Padding="20">
-                    <Label Text="Generated IV:" FontAttributes="Bold" FontSize="13" HorizontalOptions="Center" TextColor="Black"  Margin="-30,0,10,0"/>
-                    <Entry x:Name="ivTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="white" WidthRequest="600"/>
-                </StackLayout>
 
                 <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Padding="5">
                     <Button Text="Encrypt File" Clicked="Encrypt_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
