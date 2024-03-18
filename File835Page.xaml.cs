@@ -87,7 +87,6 @@ public partial class File835Page : ContentPage
             return null;
         }
     }
-
     private async Task<byte[]> EncryptFiles(byte[] fileBytes)
     {
         try
