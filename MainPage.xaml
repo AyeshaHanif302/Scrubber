@@ -13,22 +13,20 @@
 
     <Frame BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="20">
 
-        <ScrollView>
-
         <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
 
-            <Image Source="drlogo.ico" Margin="50,0,0,0" HeightRequest="100" WidthRequest="100" HorizontalOptions="Start" />
+            <Image Source="drlogo.ico" HeightRequest="90" WidthRequest="90" HorizontalOptions="Start" />
 
-            <Label Text="Scrubber" Margin="60,-85,0,0" FontAttributes="Bold" FontSize="50" HorizontalOptions="Center" VerticalOptions="Start" TextColor="Black"/>
+            <Label Text="Scrubber" Margin="50,-85,0,0" FontAttributes="Bold" FontSize="50" HorizontalOptions="Center" VerticalOptions="Start" TextColor="Black"/>
 
             <StackLayout Padding="0"  Margin="0,70,0,0" HorizontalOptions="Center" >
-                <Entry x:Name="Browse" IsReadOnly="True" TextColor="Black" Placeholder="Select a File" HorizontalOptions="Start"  BackgroundColor="GhostWhite" WidthRequest="500"/>
+                <Entry x:Name="Browse" IsReadOnly="True" TextColor="Black" Placeholder="Select a File" HorizontalOptions="Start"  BackgroundColor="GhostWhite" WidthRequest="400"/>
                 <BoxView Color="DarkSlateGray" HeightRequest="1" HorizontalOptions="FillAndExpand"/>
                 <Button Text="Browse File" Clicked="BrowseFile_Clicked" Margin="0,-43,-120,20" BackgroundColor="LightSeaGreen" TextColor="Black" HorizontalOptions="End"/>
             </StackLayout>
 
             <StackLayout Padding="0" HorizontalOptions="Center" >
-                <Entry x:Name="Destination" IsReadOnly="True" TextColor="Black" Placeholder="Selected a Folder" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="500"/>
+                <Entry x:Name="Destination" IsReadOnly="True" TextColor="Black" Placeholder="Selected a Folder" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="400"/>
                 <BoxView Color="DarkSlateGray" HeightRequest="1" HorizontalOptions="FillAndExpand"/>
                 <Button Text="Destination" Clicked="Destination_Clicked" Margin="0,-43,-120,0" BackgroundColor="LightSeaGreen" TextColor="Black" HorizontalOptions="End"/>
             </StackLayout>
@@ -47,6 +45,5 @@
             </StackLayout>
 
         </VerticalStackLayout>
-</ScrollView>
-</Frame>
+    </Frame>
 </ContentPage>

@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,30 +11,16 @@ public partial class File837Page : ContentPage
     private byte[] EncryptedBytes;
     private bool isEncrypted = false;
     private byte[] key;
-    private byte[] iv;
     private string SelectedFile;
     private string SelectedFolderPath;
 
-    public File837Page(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, string keyString, string ivString)
+    public File837Page(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, string keyString)
 	{
 		InitializeComponent();
-        key = ParseHexString(keyString);
-        iv = ParseHexString(ivString);
+        key = Convert.FromBase64String(keyString);
         SelectedFile = selectedFile;
         SelectedFolderPath = selectedFolderPath;
         EncryptedBytes = encryptedBytes;
-    }
-    // Method to parse hex string into byte array
-    private byte[] ParseHexString(string hexString)
-    {
-        hexString = hexString.Replace("-", ""); // Remove dashes if present
-        int length = hexString.Length;
-        byte[] bytes = new byte[length / 2];
-        for (int i = 0; i < length; i += 2)
-        {
-            bytes[i / 2] = Convert.ToByte(hexString.Substring(i, 2), 16);
-        }
-        return bytes;
     }
 
     //Encrypt file
@@ -129,8 +116,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -140,23 +127,12 @@ public partial class File837Page : ContentPage
                                                 case 3:
                                                 case 4:
                                                 case 5:
-                                                    if (item.value != null && item.value.Length > 0 && subscriberName837.IsChecked)
-                                                    {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
-                                                    }
-                                                    else
-                                                    {
-                                                        newLine += $"{elSeparator}{item.value}";
-                                                    }
-                                                    break;
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                    break;                                                   
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && subscriberPolicyId837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -177,8 +153,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -190,9 +166,7 @@ public partial class File837Page : ContentPage
                                                 case 3:
                                                     if (item.value != null && item.value.Length > 0 && subscriberName837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -213,8 +187,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -224,9 +198,7 @@ public partial class File837Page : ContentPage
                                                 case 1:
                                                     if (item.value != null && item.value.Length > 0 && subscriberAddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -240,8 +212,8 @@ public partial class File837Page : ContentPage
                                     }
                                     else if (line.StartsWith($"N4{elSeparator}") && loopId == "2000B" && subscriberAddress837.IsChecked)
                                     {
-                                        byte[] valueBytes = null;
-                                        byte[] encryptedBytes = null;
+                                         
+                                        
                                         newLine = string.Empty;
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
@@ -258,9 +230,7 @@ public partial class File837Page : ContentPage
                                                 case 7:
                                                     if (item.value != null && item.value.Length > 0 && subscriberAddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -281,8 +251,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -295,9 +265,7 @@ public partial class File837Page : ContentPage
                                                 case 2:
                                                     if (item.value != null && item.value.Length > 0 && patientpolicyId837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -317,8 +285,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -330,9 +298,7 @@ public partial class File837Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && payerName837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -353,8 +319,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -364,9 +330,7 @@ public partial class File837Page : ContentPage
                                                 case 1:
                                                     if (item.value != null && item.value.Length > 0 && payerAddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -384,8 +348,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -399,9 +363,7 @@ public partial class File837Page : ContentPage
                                                 case 7:
                                                     if (item.value != null && item.value.Length > 0 && payerAddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -427,8 +389,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -440,9 +402,7 @@ public partial class File837Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && patientname837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -452,9 +412,7 @@ public partial class File837Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && patientpolicyId837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -475,8 +433,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -488,9 +446,7 @@ public partial class File837Page : ContentPage
                                                 case 3:
                                                     if (item.value != null && item.value.Length > 0 && patientname837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -511,8 +467,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -522,9 +478,7 @@ public partial class File837Page : ContentPage
                                                 case 1:
                                                     if (item.value != null && item.value.Length > 0 && patientaddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -542,8 +496,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -557,9 +511,7 @@ public partial class File837Page : ContentPage
                                                 case 7:
                                                     if (item.value != null && item.value.Length > 0 && patientaddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -735,8 +687,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -746,9 +698,7 @@ public partial class File837Page : ContentPage
                                                 case 2:
                                                     if (item.value != null && item.value.Length > 0 && medicalRecordNo837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -769,8 +719,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -783,9 +733,7 @@ public partial class File837Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && attendingProviderName837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -806,8 +754,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -819,9 +767,7 @@ public partial class File837Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && renderingProviderName837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -831,9 +777,7 @@ public partial class File837Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && renderingProviderPolicyId837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -859,8 +803,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -870,9 +814,7 @@ public partial class File837Page : ContentPage
                                                 case 1:
                                                     if (item.value != null && item.value.Length > 0 && serviceFacilityAddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -890,8 +832,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -905,9 +847,7 @@ public partial class File837Page : ContentPage
                                                 case 7:
                                                     if (item.value != null && item.value.Length > 0 && serviceFacilityAddress837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -933,8 +873,8 @@ public partial class File837Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                             
+                                            
 
                                             switch (item.index)
                                             {
@@ -944,9 +884,7 @@ public partial class File837Page : ContentPage
                                                 case 2:
                                                     if (item.value != null && item.value.Length > 0 && serviceLineItemControlNo837.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -995,32 +933,35 @@ public partial class File837Page : ContentPage
             return null;
         }
     }
-    private byte[] EncryptText(byte[] textBytes)
+    private string EncryptText(string value)
     {
-        try
-        {
-            using (Aes aesAlg = Aes.Create())
-            {
-                aesAlg.Key = key;
-                aesAlg.IV = iv;
-                aesAlg.Padding = PaddingMode.ISO10126;
+        // Get bytes of plaintext string
+        byte[] plainBytes = Encoding.UTF8.GetBytes(value);
 
-                using (MemoryStream msEncrypt = new MemoryStream())
-                {
-                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, aesAlg.CreateEncryptor(), CryptoStreamMode.Write))
-                    {
-                        csEncrypt.Write(textBytes, 0, textBytes.Length);
-                    }
-                    return msEncrypt.ToArray();
+        // Get parameter sizes
+        int nonceSize = AesGcm.NonceByteSizes.MaxSize;
+        int tagSize = AesGcm.TagByteSizes.MaxSize;
+        int cipherSize = plainBytes.Length;
 
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error during text encryption: " + ex.Message);
-            return null;
-        }
+        // We write everything into one big array for easier encoding
+        int encryptedDataLength = 4 + nonceSize + 4 + tagSize + cipherSize;
+        Span<byte> encryptedData = encryptedDataLength < 1024
+                                  ? stackalloc byte[encryptedDataLength]
+                                  : new byte[encryptedDataLength].AsSpan();
+
+        // Copy parameters
+        BinaryPrimitives.WriteInt32LittleEndian(encryptedData.Slice(0, 4), nonceSize);
+        BinaryPrimitives.WriteInt32LittleEndian(encryptedData.Slice(4 + nonceSize, 4), tagSize);
+        var nonce = encryptedData.Slice(4, nonceSize);
+        var tag = encryptedData.Slice(4 + nonceSize + 4, tagSize);
+        var cipherBytes = encryptedData.Slice(4 + nonceSize + 4 + tagSize, cipherSize);
+
+        // Encrypt
+        using var aes = new AesGcm(key);
+        aes.Encrypt(nonce, plainBytes, cipherBytes, tag);
+
+        // Encode for transmission
+        return Convert.ToBase64String(encryptedData);
     }
     private string EncodeText(string text)
     {
@@ -1447,7 +1388,7 @@ public partial class File837Page : ContentPage
             using (Aes aesAlg = Aes.Create())
             {
                 aesAlg.Key = key;
-                aesAlg.IV = iv;
+                //aesAlg.IV = iv;
                 aesAlg.Padding = PaddingMode.ISO10126;
 
                 using (MemoryStream msDecrypt = new MemoryStream())
@@ -1469,7 +1410,7 @@ public partial class File837Page : ContentPage
         }
     }
 
-    //Download file
+   // Download file
     private async void Download_Clicked(object sender, EventArgs e)
     {
         try
