@@ -1,3 +1,4 @@
+using Microsoft.Maui;
 using Microsoft.Maui.Controls.Shapes;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
@@ -12,30 +13,16 @@ public partial class File835Page : ContentPage
     private byte[] EncryptedBytes;
     private bool isEncrypted = false;
     private byte[] key;
-    private byte[] iv;
     private string SelectedFile;
     private string SelectedFolderPath;
-    public File835Page(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, string keyString, string ivString)
+    public File835Page(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, string keyString)
 	{
 		InitializeComponent();
-        key = ParseHexString(keyString);
-        iv = ParseHexString(ivString);
+        key = Convert.FromBase64String(keyString);
         SelectedFile = selectedFile;
         SelectedFolderPath = selectedFolderPath;
         EncryptedBytes = encryptedBytes;
-    }
 
-    // Method to parse hex string into byte array
-    private byte[] ParseHexString(string hexString)
-    {
-        hexString = hexString.Replace("-", ""); // Remove dashes if present
-        int length = hexString.Length;
-        byte[] bytes = new byte[length / 2];
-        for (int i = 0; i < length; i += 2)
-        {
-            bytes[i / 2] = Convert.ToByte(hexString.Substring(i, 2), 16);
-        }
-        return bytes;
     }
 
     //Encrypt file
@@ -61,32 +48,35 @@ public partial class File835Page : ContentPage
             await DisplayAlert("Error", ex.Message, "Ok");
         }
     }
-    private byte[] EncryptText(byte[] textBytes)
+    private string EncryptText(string value)
     {
-        try
-        {
-            using (Aes aesAlg = Aes.Create())
-            {
-                aesAlg.Key = key;
-                aesAlg.IV = iv;
-                aesAlg.Padding = PaddingMode.ISO10126;
+        // Get bytes of plaintext string
+        byte[] plainBytes = Encoding.UTF8.GetBytes(value);
 
-                using (MemoryStream msEncrypt = new MemoryStream())
-                {
-                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, aesAlg.CreateEncryptor(), CryptoStreamMode.Write))
-                    {
-                        csEncrypt.Write(textBytes, 0, textBytes.Length);
-                    }
-                    return msEncrypt.ToArray();
+        // Get parameter sizes
+        int nonceSize = AesGcm.NonceByteSizes.MaxSize;
+        int tagSize = AesGcm.TagByteSizes.MaxSize;
+        int cipherSize = plainBytes.Length;
 
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error during text encryption: " + ex.Message);
-            return null;
-        }
+        // We write everything into one big array for easier encoding
+        int encryptedDataLength = 4 + nonceSize + 4 + tagSize + cipherSize;
+        Span<byte> encryptedData = encryptedDataLength < 1024
+                                  ? stackalloc byte[encryptedDataLength]
+                                  : new byte[encryptedDataLength].AsSpan();
+
+        // Copy parameters
+        BinaryPrimitives.WriteInt32LittleEndian(encryptedData.Slice(0, 4), nonceSize);
+        BinaryPrimitives.WriteInt32LittleEndian(encryptedData.Slice(4 + nonceSize, 4), tagSize);
+        var nonce = encryptedData.Slice(4, nonceSize);
+        var tag = encryptedData.Slice(4 + nonceSize + 4, tagSize);
+        var cipherBytes = encryptedData.Slice(4 + nonceSize + 4 + tagSize, cipherSize);
+
+        // Encrypt
+        using var aes = new AesGcm(key);
+        aes.Encrypt(nonce, plainBytes, cipherBytes, tag);
+
+        // Encode for transmission
+        return Convert.ToBase64String(encryptedData);
     }
     private async Task<byte[]> EncryptFiles(byte[] fileBytes)
     {
@@ -164,10 +154,8 @@ public partial class File835Page : ContentPage
                                                     case 0:
                                                         newLine = item.value;
                                                         break;
-                                                    case 2:
-                                                        byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        byte[] encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    case 2:                                                      
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                         break;
                                                     default:
                                                         newLine += $"{elSeparator}{item.value}";
@@ -195,9 +183,9 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 1:
-                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                    byte[] encryptedBytes = EncryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    
+                                                    
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                             }
                                         }
@@ -220,9 +208,7 @@ public partial class File835Page : ContentPage
                                                 case 3:
                                                 case 4:
                                                 case 7:
-                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                    byte[] encryptedBytes = EncryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -243,9 +229,6 @@ public partial class File835Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
-
                                             switch (item.index)
                                             {
                                                 case 0:
@@ -256,9 +239,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && patientname835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -268,9 +249,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && patientpolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -292,8 +271,8 @@ public partial class File835Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
+                                            
+                                            
 
                                             switch (item.index)
                                             {
@@ -305,9 +284,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && subscriberName835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                       newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -317,9 +294,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && subscriberPolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -341,9 +316,6 @@ public partial class File835Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
-
                                             switch (item.index)
                                             {
                                                 case 0:
@@ -354,9 +326,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && correctedInsuredName835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -366,9 +336,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && correctedInsuredPolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -389,9 +357,6 @@ public partial class File835Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] encryptedBytes = null;
-
                                             switch (item.index)
                                             {
                                                 case 0:
@@ -402,9 +367,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && renderingProviderName835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -414,9 +377,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && renderingProviderPolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                        encryptedBytes = EncryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -443,9 +404,7 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 2:
-                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                    byte[] encryptedBytes = EncryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -472,9 +431,7 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 2:
-                                                    byte[] valueBytes = Encoding.UTF8.GetBytes(item.value);
-                                                    byte[] encryptedBytes = EncryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Convert.ToBase64String(encryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{EncryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -619,9 +576,7 @@ public partial class File835Page : ContentPage
                                                         newLine = item.value;
                                                         break;
                                                     case 2:
-                                                        byte[] valueBytes = Convert.FromBase64String(item.value); 
-                                                        byte[] decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                         newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                         break;
                                                     default:
                                                         newLine += $"{elSeparator}{item.value}";
@@ -649,9 +604,7 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 1:
-                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
-                                                    byte[] decryptedBytes = DecryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                             }
                                         }
@@ -674,9 +627,7 @@ public partial class File835Page : ContentPage
                                                 case 3:
                                                 case 4:
                                                 case 7:
-                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
-                                                    byte[] decryptedBytes = DecryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                     newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -697,8 +648,8 @@ public partial class File835Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] decryptedBytes = null;
+
+                                             
 
                                             switch (item.index)
                                             {
@@ -710,9 +661,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && patientname835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -722,9 +671,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && patientpolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                       newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -746,8 +693,8 @@ public partial class File835Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] decryptedBytes = null;
+
+                                             
 
                                             switch (item.index)
                                             {
@@ -759,9 +706,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && subscriberName835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -771,9 +716,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && subscriberPolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                         newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -789,15 +732,12 @@ public partial class File835Page : ContentPage
 
                                         finalLines.Add($"{newLine}{sgSeparator}");
                                     }
-                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}74{elSeparator}") && loopId == "2100" )
+                                    else if (line.StartsWith($"NM1{elSeparator}") && line.Contains($"{elSeparator}74{elSeparator}") && loopId == "2100")
                                     {
                                         newLine = string.Empty;
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] decryptedBytes = null;
-
                                             switch (item.index)
                                             {
                                                 case 0:
@@ -808,9 +748,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && correctedInsuredName835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                         newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -820,9 +758,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && correctedInsuredPolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -843,9 +779,6 @@ public partial class File835Page : ContentPage
 
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
-                                            byte[] valueBytes = null;
-                                            byte[] decryptedBytes = null;
-
                                             switch (item.index)
                                             {
                                                 case 0:
@@ -856,9 +789,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && renderingProviderName835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -868,9 +799,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && renderingProviderPolicyId835.IsChecked)
                                                     {
-                                                        valueBytes = Convert.FromBase64String(item.value);
-                                                        decryptedBytes = DecryptText(valueBytes);
-                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -897,9 +826,7 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 2:
-                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
-                                                    byte[] decryptedBytes = DecryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                     newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -926,9 +853,7 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 2:
-                                                    byte[] valueBytes = Convert.FromBase64String(item.value);
-                                                    byte[] decryptedBytes = DecryptText(valueBytes);
-                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{Encoding.UTF8.GetString(decryptedBytes)}" : $"{elSeparator}{item.value}";
+                                                     newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -972,32 +897,35 @@ public partial class File835Page : ContentPage
             return null;
         }
     }
-    private byte[] DecryptText(byte[] encryptedTextBytes)
+    private string DecryptText(string encryptedBase64)
     {
         try
         {
-            using (Aes aesAlg = Aes.Create())
-            {
-                aesAlg.Key = key;
-                aesAlg.IV = iv;
-                aesAlg.Padding = PaddingMode.ISO10126;
+            byte[] encryptedData = Convert.FromBase64String(encryptedBase64);
 
-                using (MemoryStream msDecrypt = new MemoryStream())
-                {
-                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, aesAlg.CreateDecryptor(), CryptoStreamMode.Write))
-                    {
-                        csDecrypt.Write(encryptedTextBytes, 0, encryptedTextBytes.Length);
-                        csDecrypt.FlushFinalBlock();
-                    }
+            // Extract parameters
+            int nonceSize = BinaryPrimitives.ReadInt32LittleEndian(encryptedData.AsSpan(0, 4));
+            int tagSize = BinaryPrimitives.ReadInt32LittleEndian(encryptedData.AsSpan(4 + nonceSize, 4));
+            byte[] nonce = encryptedData.AsSpan(4, nonceSize).ToArray();
+            byte[] tag = encryptedData.AsSpan(4 + nonceSize + 4, tagSize).ToArray();
+            byte[] cipherBytes = encryptedData.AsSpan(4 + nonceSize + 4 + tagSize).ToArray();
 
-                    return msDecrypt.ToArray();
-                }
-            }
+            // Decrypt
+            using var aes = new AesGcm(key);
+            byte[] decryptedBytes = new byte[cipherBytes.Length];
+            aes.Decrypt(nonce, cipherBytes, tag, decryptedBytes);
+
+            // Convert decrypted bytes to string
+            string decryptedText = Encoding.UTF8.GetString(decryptedBytes);
+
+            return decryptedText;
         }
-        catch (Exception ex)
+        catch (FormatException ex)
         {
-            Console.WriteLine("Error during text decryption: " + ex.Message);
-            return null;
+            // Handle invalid Base64 string
+            Console.WriteLine("Error: The input is not a valid Base64 string.");
+            Console.WriteLine(ex.Message);
+            return null; // or throw an exception or handle the error according to your application's logic
         }
     }
 

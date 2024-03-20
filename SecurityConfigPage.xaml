@@ -12,20 +12,38 @@
         </StackLayout>
     </NavigationPage.TitleView>
 
-    <Frame BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="20">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <!-- Left side for buttons -->
+            <ColumnDefinition Width="*"/>
+            <!-- Right side for content -->
+        </Grid.ColumnDefinitions>
+
+        <StackLayout Grid.Column="0" Orientation="Vertical" HorizontalOptions="Start" VerticalOptions="FillAndExpand">
+            <Button Text="Location" Margin="10" TextColor="Black"/>
+            <Button Text="Encryption" Margin="10" TextColor="Black"/>
+            <Button Text="Files" Margin="10" TextColor="Black"/>
+            <Button Text="ICD-10 Codes" Margin="10" TextColor="Black"/>
+        </StackLayout>
+
+        <Frame Grid.Column="1" BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="10">
 
         <ScrollView>
 
-        <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
+        <VerticalStackLayout Padding="20" VerticalOptions="StartAndExpand" HorizontalOptions="CenterAndExpand" >
             
             <Grid Grid.Row="0">
                 <Image Source="drlogo.ico" Margin="0,0,250,0"  Grid.Column="0" HorizontalOptions="Center" HeightRequest="90" WidthRequest="90" />
                 <Label Text="Scrubber" Margin="100,5,0,0" Grid.Column="1" FontAttributes="Bold" HorizontalOptions="Center" FontSize="50" TextColor="Black"/>
             </Grid>
 
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Start" Padding="20" Margin="0,30,0,0">
+            <StackLayout Orientation="Horizontal" VerticalOptions="CenterAndExpand" HorizontalOptions="Start" Padding="20" Margin="0,30,100,0">
                 <Label Text="Generated Key:" FontSize="13" HorizontalOptions="Center" TextColor="Black"  Margin="0,0,10,0"/>
-                <Entry x:Name="keyTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="600" TextChanged="OnEntryTextChanged"/>
+                <Grid>
+                    <Entry x:Name="keyTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="500" TextChanged="OnEntryTextChanged"/>
+                    <BoxView Color="lightSeaGreen" HeightRequest="1" HorizontalOptions="FillAndExpand" VerticalOptions="End" WidthRequest="500"/>
+                </Grid>
             </StackLayout>
 
             <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
@@ -43,4 +61,5 @@
             
         </ScrollView>
     </Frame>
+ </Grid>
 </ContentPage>

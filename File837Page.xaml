@@ -12,10 +12,23 @@
         </StackLayout>
     </NavigationPage.TitleView>
 
-    <Frame BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="20">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <!-- Left side for buttons -->
+            <ColumnDefinition Width="*"/>
+            <!-- Right side for content -->
+        </Grid.ColumnDefinitions>
 
-        <ScrollView>
-        
+        <StackLayout Grid.Column="0" Orientation="Vertical" HorizontalOptions="Start" VerticalOptions="FillAndExpand">
+            <Button Text="Location" Margin="10" TextColor="Black"/>
+            <Button Text="Encryption" Margin="10" TextColor="Black"/>
+            <Button Text="Files" Margin="10" TextColor="Black"/>
+            <Button Text="ICD-10 Codes" Margin="10" TextColor="Black"/>
+        </StackLayout>
+
+        <Frame Grid.Column="1" BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="10">
+
             <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
 
                 <Grid Grid.Row="0">
@@ -26,7 +39,7 @@
                 <Label Text="Select All" TextColor="Black" Margin="380,10,0,0" />
                 <CheckBox x:Name="selectAll" Color="LightSeaGreen" Margin="445,-32,0,0" CheckedChanged="SelectAllCheckedChanged"  Scale="0.8"/>
 
-                <Grid Margin ="0,-30,0,0">
+                <Grid Margin ="0,-40,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
@@ -73,12 +86,7 @@
 
                 </Grid>
 
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="ICD10 Codes" TextColor="Black" Margin="20,10,10,0" />
-                    <Entry x:Name="TxtHIICD10Codes" TextColor="Black" Placeholder="ICD10 Codes" BackgroundColor="GhostWhite" />
-                </StackLayout>
-
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Padding="10">
+                <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Margin="0,-20,0,0">
                     <Button Text="Encrypt File" Clicked="Encrypt_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
                     <Button Text="Decrypt File" Clicked="Decrypt_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
                     <Button Text="Download File" Clicked="Download_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
@@ -86,6 +94,6 @@
                 </StackLayout>
                 
             </VerticalStackLayout>
-        </ScrollView>
     </Frame>
+    </Grid>
 </ContentPage>
