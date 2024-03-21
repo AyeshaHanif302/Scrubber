@@ -1,35 +1,39 @@
-using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 
 namespace Scrubber;
 
 public partial class SecurityConfigPage : ContentPage
 {
-    private byte[] EncryptedBytes;
-    private string SelectedFile;
+    private List<byte[]> EncryptedContent;
+    private List<string> SelectedFile;
     private string SelectedFolderPath;
     private bool IsType835Checked;
     private bool IsType837Checked;
-    //private readonly IConfiguration _configuration;
-
-    public SecurityConfigPage(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, bool isType835Checked, bool isType837Checked)
+    public SecurityConfigPage(List<string> selectedFile, List<byte[]> encryptedContent, string selectedFolderPath, bool isType835Checked, bool isType837Checked)
 	{
 		InitializeComponent();
         SelectedFile = selectedFile;
         SelectedFolderPath = selectedFolderPath;
-        EncryptedBytes = encryptedBytes;
+        EncryptedContent = encryptedContent;
         IsType835Checked = isType835Checked;
         IsType837Checked = isType837Checked;
         Next.IsEnabled = false;
-
     }
+    
+    #region Navigation
     private void OnEntryTextChanged(object sender, TextChangedEventArgs e)
     {
         Next.IsEnabled = !string.IsNullOrWhiteSpace(keyTextBox.Text);
         Next.BackgroundColor = Next.IsEnabled ? Color.FromRgba(32, 178, 170, 255) : Color.FromRgba(240, 248, 255, 255);
     }
+    private async void Next_Clicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new ICD_10Page(SelectedFile, EncryptedContent, SelectedFolderPath, keyTextBox.Text, IsType835Checked, IsType837Checked));
+    }
 
-    //Generate Key
+    #endregion
+
+    #region Generate Encryption Key
     private string GenerateScrubberKey()
     {
         var data = new byte[32];
@@ -44,8 +48,6 @@ public partial class SecurityConfigPage : ContentPage
 
         generateKeyButton.IsEnabled = false;
     }
-    private async void Next_Clicked(object sender, EventArgs e)
-    {
-        await Navigation.PushAsync(new ICD_10Page(SelectedFile, EncryptedBytes, SelectedFolderPath, keyTextBox.Text, IsType835Checked, IsType837Checked));
-    }
+    
+    #endregion
 }

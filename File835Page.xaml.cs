@@ -1,5 +1,3 @@
-using Microsoft.Maui;
-using Microsoft.Maui.Controls.Shapes;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,33 +8,40 @@ namespace Scrubber;
 public partial class File835Page : ContentPage
 {
     private List<string> selectedColumns = new List<string>();
-    private byte[] EncryptedBytes;
+    private List<byte[]> EncryptedBytes;
     private bool isEncrypted = false;
     private byte[] key;
-    private string SelectedFile;
+    private List<string> SelectedFiles;
     private string SelectedFolderPath;
-    public File835Page(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, string keyString)
+    private List<byte[]> EncryptedFiles;
+
+    public File835Page(List<string> selectedFile, List<byte[]> encryptedBytes, string selectedFolderPath, string keyString)
 	{
 		InitializeComponent();
         key = Convert.FromBase64String(keyString);
-        SelectedFile = selectedFile;
+        SelectedFiles = selectedFile;
         SelectedFolderPath = selectedFolderPath;
         EncryptedBytes = encryptedBytes;
-
+        EncryptedFiles = new List<byte[]>();
     }
 
-    //Encrypt file
+    #region Encryption
     private async void Encrypt_Clicked(object sender, EventArgs e)
     {
         try
         {
-            if (EncryptedBytes != null && EncryptedBytes.Length > 0)
+            if (EncryptedBytes != null && EncryptedBytes.Count > 0)
             {
-                EncryptedBytes = await EncryptFiles(EncryptedBytes);
+                EncryptedFiles.Clear();
+
+                foreach (var fileBytes in EncryptedBytes)
+                {
+                     var encryptedFileBytes = await EncryptFiles(fileBytes);
+                    EncryptedFiles.Add(encryptedFileBytes);
+                }
+
                 isEncrypted = true;
-
-                await DisplayAlert("Info", "File Encrypted", "Ok");
-
+                await DisplayAlert("Info", "Files Encrypted", "Ok");
             }
             else
             {
@@ -93,8 +98,6 @@ public partial class File835Page : ContentPage
             {
                 await Task.Delay(50);
                 finalLines.Clear();
-
-                //var fileData = await File.ReadAllTextAsync($"{Selectedfile}\\{currentLine}");
 
                 var fileData = fileContent;
 
@@ -476,18 +479,26 @@ public partial class File835Page : ContentPage
         }
     }
 
-    //Decrypt file
+    #endregion
+
+    #region Decryption
     private async void Decrypt_Clicked(object sender, EventArgs e)
     {
         try
         {
-            if (EncryptedBytes != null && EncryptedBytes.Length > 0)
+            if (EncryptedBytes != null && EncryptedBytes.Count > 0)
             {
-                EncryptedBytes = await DecryptFile(EncryptedBytes);
+                EncryptedFiles.Clear();
+
+                foreach (var fileBytes in EncryptedBytes)
+                {
+                    var encryptedFileBytes = await DecryptFiles(fileBytes);
+                    EncryptedFiles.Add(encryptedFileBytes);
+                }
+
                 isEncrypted = false;
 
-                await DisplayAlert("Info", "File Decrypted", "Ok");
-
+                await DisplayAlert("Info", "Files Decrypted", "Ok");
             }
             else
             {
@@ -499,7 +510,7 @@ public partial class File835Page : ContentPage
             await DisplayAlert("Error", ex.Message, "Ok");
         }
     }
-    private async Task<byte[]> DecryptFile(byte[] encryptedBytes)
+    private async Task<byte[]> DecryptFiles(byte[] encryptedBytes)
     {
         try
         {
@@ -536,7 +547,6 @@ public partial class File835Page : ContentPage
 
                     var fileType = string.Empty;
 
-                    //835 file
                     if (fileData.Contains($"ST{elSeparator}835{elSeparator}"))
                         fileType = "835";
 
@@ -576,7 +586,7 @@ public partial class File835Page : ContentPage
                                                         newLine = item.value;
                                                         break;
                                                     case 2:
-                                                         newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                         break;
                                                     default:
                                                         newLine += $"{elSeparator}{item.value}";
@@ -627,7 +637,7 @@ public partial class File835Page : ContentPage
                                                 case 3:
                                                 case 4:
                                                 case 7:
-                                                     newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -649,7 +659,7 @@ public partial class File835Page : ContentPage
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
 
-                                             
+
 
                                             switch (item.index)
                                             {
@@ -671,7 +681,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && patientpolicyId835.IsChecked)
                                                     {
-                                                       newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -694,7 +704,7 @@ public partial class File835Page : ContentPage
                                         foreach (var item in values.Select((value, index) => new { value = value, index }))
                                         {
 
-                                             
+
 
                                             switch (item.index)
                                             {
@@ -716,7 +726,7 @@ public partial class File835Page : ContentPage
                                                 case 9:
                                                     if (item.value != null && item.value.Length > 0 && subscriberPolicyId835.IsChecked)
                                                     {
-                                                         newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -748,7 +758,7 @@ public partial class File835Page : ContentPage
                                                 case 5:
                                                     if (item.value != null && item.value.Length > 0 && correctedInsuredName835.IsChecked)
                                                     {
-                                                         newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                        newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     }
                                                     else
                                                     {
@@ -826,7 +836,7 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 2:
-                                                     newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -853,7 +863,7 @@ public partial class File835Page : ContentPage
                                                     newLine = item.value;
                                                     break;
                                                 case 2:
-                                                     newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
+                                                    newLine += !string.IsNullOrWhiteSpace(item.value) ? $"{elSeparator}{DecryptText(item.value)}" : $"{elSeparator}{item.value}";
                                                     break;
                                                 default:
                                                     newLine += $"{elSeparator}{item.value}";
@@ -929,42 +939,107 @@ public partial class File835Page : ContentPage
         }
     }
 
-    //Download file
+    #endregion
+
+    #region Download
     private async void Download_Clicked(object sender, EventArgs e)
     {
         try
         {
-            byte[] fileBytesForDownload = null;
+            byte[] keyBytes = Encoding.UTF8.GetBytes(Convert.ToBase64String(key));
 
             if (isEncrypted)
             {
-                fileBytesForDownload = EncryptedBytes;
-            }
-            else if (EncryptedBytes != null)
-            {
-                fileBytesForDownload = new byte[EncryptedBytes.Length];
-                Array.Copy(EncryptedBytes, fileBytesForDownload, EncryptedBytes.Length);
-            }
-
-            if (fileBytesForDownload != null && fileBytesForDownload.Length > 0)
-            {
-                if (!(string.IsNullOrWhiteSpace(SelectedFile)) && !(string.IsNullOrWhiteSpace(SelectedFolderPath)))
+                if (EncryptedFiles != null && EncryptedFiles.Count > 0)
                 {
-                    var fileName = string.IsNullOrWhiteSpace(SelectedFile) ? "defaultFileName" : SelectedFile;
-                    var filePath = System.IO.Path.Combine(SelectedFolderPath, fileName);
-
-                    File.WriteAllBytes(filePath, fileBytesForDownload);
-
-                    await DisplayAlert("Info", "File downloaded to " + filePath, "Ok");
+                    await DownloadEncryptedFiles(EncryptedFiles, keyBytes);
                 }
                 else
                 {
-                    await DisplayAlert("Info", "No file path available", "Ok");
+                    await DisplayAlert("Info", "No file to download", "Ok");
                 }
+            }
+            else if (!isEncrypted)
+            {
+                 if (EncryptedFiles != null && EncryptedFiles.Count > 0)
+                 {
+                     await DownloadDecryptedFiles(EncryptedFiles);
+                 }
+                 else
+                 {
+                     await DisplayAlert("Info", "No file to download", "Ok");
+                 }
             }
             else
             {
-                await DisplayAlert("Info", "No file to download", "Ok");
+                await DisplayAlert("Info", "No file available for download", "Ok");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "Ok");
+        }
+    }
+    private async Task DownloadEncryptedFiles(List<byte[]> files, byte[] keyBytes)
+    {
+        try
+        {
+            if (SelectedFiles != null && SelectedFiles.Count > 0 && !(string.IsNullOrWhiteSpace(SelectedFolderPath)))
+            {
+                var folderName = "DownloadedFiles_" + DateTime.Now.ToString("yyyy_MM_dd_HHmmss");
+                var folderPath = System.IO.Path.Combine(SelectedFolderPath, folderName);
+
+                Directory.CreateDirectory(folderPath);
+
+                var keyFilePath = System.IO.Path.Combine(folderPath, "encryption_key.txt");
+                File.WriteAllBytes(keyFilePath, keyBytes);
+
+                for (int i = 0; i < files.Count; i++)
+                {
+                    var selectedFile = SelectedFiles[i];
+                    var fileName = string.IsNullOrWhiteSpace(selectedFile) ? "defaultFileName" : selectedFile;
+                    var filePath = System.IO.Path.Combine(folderPath, fileName);
+
+                    File.WriteAllBytes(filePath, files[i]);
+                }
+
+                await DisplayAlert("Info", "Files downloaded to " + folderPath, "Ok");
+            }
+            else
+            {
+                await DisplayAlert("Info", "No file path available", "Ok");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "Ok");
+        }
+    }
+    private async Task DownloadDecryptedFiles(List<byte[]> files)
+    {
+        try
+        {
+            if (SelectedFiles != null && SelectedFiles.Count > 0 && !string.IsNullOrWhiteSpace(SelectedFolderPath))
+            {
+                var folderName = "DecryptedFiles_" + DateTime.Now.ToString("yyyy_MM_dd_HHmmss");
+                var folderPath = System.IO.Path.Combine(SelectedFolderPath, folderName);
+
+                Directory.CreateDirectory(folderPath);
+
+                for (int i = 0; i < files.Count; i++)
+                {
+                    var selectedFile = SelectedFiles[i];
+                    var fileName = string.IsNullOrWhiteSpace(selectedFile) ? "defaultFileName" : selectedFile;
+                    var filePath = System.IO.Path.Combine(folderPath, fileName);
+
+                    File.WriteAllBytes(filePath, files[i]);
+                }
+
+                await DisplayAlert("Info", "files downloaded to " + folderPath, "Ok");
+            }
+            else
+            {
+                await DisplayAlert("Info", "No file path available", "Ok");
             }
         }
         catch (Exception ex)
@@ -973,7 +1048,9 @@ public partial class File835Page : ContentPage
         }
     }
 
-    //Seleted checkbox
+    #endregion
+
+    #region Checkbox Event Handlers
     void OnCheckBoxCheckedChanged(object sender, CheckedChangedEventArgs e)
     {
         CheckBox checkbox = (CheckBox)sender;
@@ -1023,4 +1100,7 @@ public partial class File835Page : ContentPage
             checkbox.IsChecked = false;
         }
     }
+
+    #endregion
+
 }

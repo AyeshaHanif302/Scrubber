@@ -2,18 +2,18 @@ namespace Scrubber;
 
 public partial class ICD_10Page : ContentPage
 {
-    private byte[] EncryptedBytes;
-    private string SelectedFile;
+    private List<byte[]> EncryptedContent;
+    private List<string> SelectedFile;
     private string SelectedFolderPath;
     private string KeyString;
     private bool IsType835Checked;
     private bool IsType837Checked;
-    public ICD_10Page(string selectedFile, byte[] encryptedBytes, string selectedFolderPath, string keyString, bool is838, bool is837)
+    public ICD_10Page(List<string> selectedFile, List<byte[]> encryptedContent, string selectedFolderPath, string keyString, bool is838, bool is837)
 	{
 		InitializeComponent();
         SelectedFile = selectedFile;
         SelectedFolderPath = selectedFolderPath;
-        EncryptedBytes = encryptedBytes;
+        EncryptedContent = encryptedContent;
         KeyString = keyString;
         IsType835Checked = is838;
         IsType837Checked = is837;
@@ -23,11 +23,11 @@ public partial class ICD_10Page : ContentPage
     {
         if (IsType835Checked)
         {
-            await Navigation.PushAsync(new File835Page(SelectedFile, EncryptedBytes, SelectedFolderPath, KeyString));
+            await Navigation.PushAsync(new File835Page(SelectedFile, EncryptedContent, SelectedFolderPath, KeyString));
         }
         else if (IsType837Checked)
         {
-            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedBytes, SelectedFolderPath, KeyString, TxtHIICD10Codes.Text));
+            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, KeyString, TxtHIICD10Codes.Text));
         }
         else
         {

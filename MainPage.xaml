@@ -22,8 +22,8 @@
         <StackLayout Grid.Column="0" Orientation="Vertical" HorizontalOptions="Start" VerticalOptions="FillAndExpand">
             <Button Text="Location" Margin="10" TextColor="Black"/>
             <Button Text="Encryption" Margin="10" TextColor="Black"/>
-            <Button Text="Files" Margin="10" TextColor="Black"/>
             <Button Text="ICD-10 Codes" Margin="10" TextColor="Black"/>
+            <Button Text="Files" Margin="10" TextColor="Black"/>
         </StackLayout>
 
         <Frame Grid.Column="1" BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="10">
