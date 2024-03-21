@@ -8,7 +8,8 @@ public partial class ICD_10Page : ContentPage
     private string KeyString;
     private bool IsType835Checked;
     private bool IsType837Checked;
-    public ICD_10Page(List<string> selectedFile, List<byte[]> encryptedContent, string selectedFolderPath, string keyString, bool is838, bool is837)
+    private bool IsTypebothChecked;
+    public ICD_10Page(List<string> selectedFile, List<byte[]> encryptedContent, string selectedFolderPath, string keyString, bool is838, bool is837, bool isboth)
 	{
 		InitializeComponent();
         SelectedFile = selectedFile;
@@ -17,6 +18,7 @@ public partial class ICD_10Page : ContentPage
         KeyString = keyString;
         IsType835Checked = is838;
         IsType837Checked = is837;
+        IsTypebothChecked = isboth;
     }
 
     private async void Next_Clicked(object sender, EventArgs e)
@@ -28,6 +30,10 @@ public partial class ICD_10Page : ContentPage
         else if (IsType837Checked)
         {
             await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, KeyString, TxtHIICD10Codes.Text));
+        }
+        else if (IsTypebothChecked)
+        {
+            await Navigation.PushAsync(new ElementsPage(SelectedFile, EncryptedContent, SelectedFolderPath, KeyString, TxtHIICD10Codes.Text));
         }
         else
         {

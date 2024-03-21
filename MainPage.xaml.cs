@@ -9,6 +9,7 @@ namespace Scrubber
         static string SelectedFolderPath;
         static bool IsType835Checked;
         static bool IsType837Checked;
+        static bool IsTypebothChecked;
         public MainPage()
         {
             InitializeComponent();
@@ -34,6 +35,10 @@ namespace Scrubber
             {
                 IsType837Checked = e.Value;
             }
+            else if (sender == typeboth)
+            {
+                IsTypebothChecked = e.Value;
+            }
         }
         private void Clear_Clicked(object sender, EventArgs e)
         {
@@ -44,7 +49,7 @@ namespace Scrubber
         }
         private async void Next_Clicked(object sender, EventArgs e)
         {
-            await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked));
+            await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
         }
 
         #endregion

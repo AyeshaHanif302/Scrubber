@@ -9,14 +9,16 @@ public partial class SecurityConfigPage : ContentPage
     private string SelectedFolderPath;
     private bool IsType835Checked;
     private bool IsType837Checked;
-    public SecurityConfigPage(List<string> selectedFile, List<byte[]> encryptedContent, string selectedFolderPath, bool isType835Checked, bool isType837Checked)
+    private bool IsTypebothChecked;
+    public SecurityConfigPage(List<string> selectedFile, List<byte[]> encryptedContent, string selectedFolderPath, bool is835, bool is837, bool isboth )
 	{
 		InitializeComponent();
         SelectedFile = selectedFile;
         SelectedFolderPath = selectedFolderPath;
         EncryptedContent = encryptedContent;
-        IsType835Checked = isType835Checked;
-        IsType837Checked = isType837Checked;
+        IsType835Checked = is835;
+        IsType837Checked = is837;
+        IsTypebothChecked = isboth;
         Next.IsEnabled = false;
     }
     
@@ -28,7 +30,7 @@ public partial class SecurityConfigPage : ContentPage
     }
     private async void Next_Clicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new ICD_10Page(SelectedFile, EncryptedContent, SelectedFolderPath, keyTextBox.Text, IsType835Checked, IsType837Checked));
+        await Navigation.PushAsync(new ICD_10Page(SelectedFile, EncryptedContent, SelectedFolderPath, keyTextBox.Text, IsType835Checked, IsType837Checked, IsTypebothChecked));
     }
 
     #endregion
