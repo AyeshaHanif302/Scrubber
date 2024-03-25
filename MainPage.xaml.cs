@@ -2,6 +2,10 @@
 
 namespace Scrubber
 {
+    public static class GlobalVariables
+    {
+        public static string EncryptionKey { get; set; }
+    }
     public partial class MainPage : ContentPage
     {
         List<string> SelectedFiles = new List<string>();
@@ -17,13 +21,23 @@ namespace Scrubber
             type835.IsChecked = true;
             Browse.TextChanged += OnEntryTextChanged;
             Destination.TextChanged += OnEntryTextChanged;
+
         }
 
         #region Navigation and Checkbox Handler
         private void OnEntryTextChanged(object sender, TextChangedEventArgs e)
         {
             Next.IsEnabled = !string.IsNullOrWhiteSpace(Browse.Text) && !string.IsNullOrWhiteSpace(Destination.Text);
-            Next.BackgroundColor = Next.IsEnabled ? Color.FromHex("#20B2AA") : Color.FromHex("#F0F8FF");
+            Next.BackgroundColor = Next.IsEnabled ? Color.FromRgba(32, 178, 170, 255) : Color.FromRgb(211, 211, 211);
+
+            Encryption.IsEnabled = !string.IsNullOrWhiteSpace(Browse.Text) && !string.IsNullOrWhiteSpace(Destination.Text);
+            Encryption.BackgroundColor = Encryption.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
+
+            if ( Encryption.IsEnabled == true)
+            {
+                ICD10.BackgroundColor = ICD10.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
+            }
+            
         }
         private void OnRadioButtonChecked(object sender, CheckedChangedEventArgs e)
         {
@@ -52,9 +66,22 @@ namespace Scrubber
             await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
         }
 
+        private async void Encryption_Clicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
+        }
+        private async void ICD10_Clicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new ICD_10Page(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
+        }
+        private void Files_Clicked(object sender, EventArgs e)
+        {
+            
+        }
+
         #endregion
 
-        #region Directory Selection
+        #region Source and Destination Selection
         private async void BrowseFile_Clicked(object sender, EventArgs e)
         {
             try
