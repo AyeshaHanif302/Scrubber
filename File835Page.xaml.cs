@@ -1121,8 +1121,6 @@ public partial class File835Page : ContentPage
         }
         await Navigation.PopAsync();
     }
-
-
     private async void Encryption_Clicked(object sender, EventArgs e)
     {
         int pagesToPop = 2;

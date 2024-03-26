@@ -75,7 +75,7 @@ public partial class SecurityConfigPage : ContentPage
         }
         else if (IsType837Checked)
         {
-            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, keyTextBox.Text, App.ICD10Codes));
+            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, App.ICD10Codes));
         }
         else if (IsTypebothChecked)
         {

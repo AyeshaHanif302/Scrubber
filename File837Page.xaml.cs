@@ -16,10 +16,10 @@ public partial class File837Page : ContentPage
     private string ICD10Codes;
     private List<byte[]> EncryptedFiles;
 
-    public File837Page(List<string> selectedFiles, List<byte[]> encryptedBytes, string selectedFolderPath, string keyString, string ICD10codes)
+    public File837Page(List<string> selectedFiles, List<byte[]> encryptedBytes, string selectedFolderPath, string ICD10codes)
 	{
 		InitializeComponent();
-        key = Convert.FromBase64String(keyString);
+        key = Convert.FromBase64String(GlobalVariables.EncryptionKey);
         SelectedFiles = selectedFiles;
         SelectedFolderPath = selectedFolderPath;
         EncryptedBytes = encryptedBytes;
@@ -2414,4 +2414,45 @@ public partial class File837Page : ContentPage
 
     #endregion
 
+    #region Navigation
+    private async void Location_Clicked(object sender, EventArgs e)
+    {
+        int pagesToPop = 3;
+
+        for (int counter = 1; counter < pagesToPop; counter++)
+        {
+            if (Navigation.NavigationStack.Count > 1)
+            {
+                Navigation.RemovePage(Navigation.NavigationStack[Navigation.NavigationStack.Count - 2]);
+            }
+            else
+            {
+                break;
+            }
+        }
+        await Navigation.PopAsync();
+    }
+    private async void Encryption_Clicked(object sender, EventArgs e)
+    {
+        int pagesToPop = 2;
+
+        for (int counter = 1; counter < pagesToPop; counter++)
+        {
+            if (Navigation.NavigationStack.Count > 1)
+            {
+                Navigation.RemovePage(Navigation.NavigationStack[Navigation.NavigationStack.Count - 2]);
+            }
+            else
+            {
+                break;
+            }
+        }
+        await Navigation.PopAsync();
+    }
+    private async void ICD10_Clicked(object sender, EventArgs e)
+    {
+        await Navigation.PopAsync();
+    }
+
+    #endregion
 }

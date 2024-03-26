@@ -29,7 +29,7 @@ public partial class ICD_10Page : ContentPage
         }
         else if (IsType837Checked)
         {
-            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, KeyString, TxtHIICD10Codes.Text));
+            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, TxtHIICD10Codes.Text));
         }
         else if (IsTypebothChecked)
         {
@@ -70,7 +70,7 @@ public partial class ICD_10Page : ContentPage
         }
         else if (IsType837Checked)
         {
-            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, KeyString, TxtHIICD10Codes.Text));
+            await Navigation.PushAsync(new File837Page(SelectedFile, EncryptedContent, SelectedFolderPath, TxtHIICD10Codes.Text));
         }
         else if (IsTypebothChecked)
         {
