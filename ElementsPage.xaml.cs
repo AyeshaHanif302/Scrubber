@@ -24,6 +24,8 @@ public partial class ElementsPage : ContentPage
         EncryptedBytes = encryptedBytes;
         ICD10Codes = ICD10;
         EncryptedFiles = new List<byte[]>();
+
+        //CheckAllCheckboxes();
     }
 
     #region Encryption
@@ -3025,7 +3027,7 @@ public partial class ElementsPage : ContentPage
     }
     private void SelectAllCheckedChanged(object sender, CheckedChangedEventArgs e)
     {
-        List<CheckBox> checkboxes835 = new List<CheckBox>
+        List<CheckBox> checkboxes= new List<CheckBox>
         {
             patientname835, patientpolicyId835, subscriberName835, subscriberPolicyId835,payerName835,
             payerAddress835, medicalRecordNo835,correctedInsuredName835,
@@ -3038,7 +3040,7 @@ public partial class ElementsPage : ContentPage
             renderingProviderPolicyId837, serviceLineItemControlNo837
         };
 
-        foreach (var checkbox in checkboxes835)
+        foreach (var checkbox in checkboxes)
         {
             checkbox.IsChecked = ((CheckBox)sender).IsChecked;
         }
@@ -3064,7 +3066,28 @@ public partial class ElementsPage : ContentPage
             checkbox.IsChecked = false;
         }
     }
+    //private void CheckAllCheckboxes()
+    //{
+    //    List<CheckBox> checkboxes = new List<CheckBox>
+    //    {
+    //        selectAll,
+    //        patientname835, patientpolicyId835, subscriberName835, subscriberPolicyId835, payerName835,
+    //        payerAddress835, medicalRecordNo835, correctedInsuredName835,
+    //        correctedInsuredPolicyId835, renderingProviderName835,
+    //        renderingProviderPolicyId835, serviceLineItemControlNo835,
+    //        patientname837, patientaddress837, patientpolicyId837, subscriberName837,
+    //        subscriberAddress837, subscriberPolicyId837, payerName837,
+    //        payerAddress837, medicalRecordNo837, attendingProviderName837,
+    //        serviceFacilityAddress837, renderingProviderName837,
+    //        renderingProviderPolicyId837, serviceLineItemControlNo837
+    //    };
 
+    //    foreach (var checkbox in checkboxes)
+    //    {
+    //        checkbox.IsChecked = true;
+    //    }
+    //}
+   
     #endregion
 
     #region Navigation
