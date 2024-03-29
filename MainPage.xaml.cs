@@ -89,12 +89,12 @@ namespace Scrubber
                 var fileTypes = new FilePickerFileType(
                     new Dictionary<DevicePlatform, IEnumerable<string>>
                     {
-                    { DevicePlatform.WinUI, new[] { ".txt" } }
+                        { DevicePlatform.WinUI, new[] { ".txt", ".edi" } }
                     });
 
                 var fileOptions = new PickOptions
                 {
-                    PickerTitle = "Please select text files",
+                    PickerTitle = "Please select text or EDI files",
                     FileTypes = fileTypes
                 };
 
@@ -125,7 +125,7 @@ namespace Scrubber
             {
                 await DisplayAlert("Error", ex.Message, "Ok");
             }
-        }   
+        }
         private async void Destination_Clicked(object sender, EventArgs e)
         {
             try
