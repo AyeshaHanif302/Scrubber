@@ -3,12 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Scrubber.ICD_10Page"
              Title="ICD_10Page"         
-             BackgroundColor="LightSeaGreen">
+             BackgroundColor="AliceBlue">
 
     <NavigationPage.TitleView>
-        <StackLayout BackgroundColor="AliceBlue" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
+        <StackLayout BackgroundColor="LightSeaGreen" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
             <Image Source="drlogo.ico" HeightRequest="30" WidthRequest="30" HorizontalOptions="Start" Margin="10,0,0,0"/>
-            <Label Text="ICD10 Codes" TextColor="Black" Margin="10,0,0,0" HorizontalOptions="StartAndExpand" VerticalOptions="CenterAndExpand" />
+            <Label Text="Security Configuration" TextColor="Black" Margin="10,0,0,0" HorizontalOptions="StartAndExpand" VerticalOptions="CenterAndExpand" />
         </StackLayout>
     </NavigationPage.TitleView>
 
@@ -18,33 +18,48 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <StackLayout Grid.Column="0" Orientation="Vertical" HorizontalOptions="Start" VerticalOptions="FillAndExpand">
-            <Button x:Name = "Location" Text="Location" Margin="10" TextColor="Black" Clicked="Location_Clicked"/>
-            <Button x:Name = "Encryption" Text="Encryption" Margin="10" TextColor="Black" Clicked="Encryption_Clicked"/>
-            <Button x:Name = "ICD10" Text="ICD-10 Codes" Margin="10" TextColor="Black" />
-            <Button x:Name = "Files" Text="Files" Margin="10" TextColor="Black" Clicked="Files_Clicked"/>
+        <StackLayout Grid.Column="0" Padding="10" Orientation="Vertical" WidthRequest="150"  HorizontalOptions="Start" VerticalOptions="FillAndExpand">
+            <Label Text="Location" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Location_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgEncryption" Text="Encryption" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers >
+                    <TapGestureRecognizer Tapped="Encryption_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgICD10" Text="ICD-10 Codes" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="ICD10_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgFiles" Text="Files" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Files_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
         </StackLayout>
 
-        <Frame Grid.Column="1" BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="10">
+        <Frame Grid.Column="1" BorderColor="LightGray" Margin="5" BackgroundColor="white" CornerRadius="0">
 
-        <VerticalStackLayout Padding="0" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
-            <Grid Grid.Row="0">
-                <Image Source="drlogo.ico" Margin="0,0,200,0"  Grid.Column="0" HorizontalOptions="Center" HeightRequest="80" WidthRequest="80" />
-                <Label Text="Scrubber" Margin="100,0,0,0" Grid.Column="1" FontAttributes="Bold" HorizontalOptions="Center" FontSize="50" TextColor="Black"/>
-            </Grid>
-            
-            <StackLayout Orientation="Vertical" HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
+            <VerticalStackLayout Padding="0" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
+
+                <StackLayout Orientation="Vertical" HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
                 <Label Text="ICD10 Codes" TextColor="Black" FontSize="20" FontAttributes="Bold" Margin="20,30,0,0" HorizontalOptions="CenterAndExpand"/>
                 <Grid>
                     <Editor x:Name="TxtHIICD10Codes" TextColor="Black" Placeholder="ICD10 Codes" BackgroundColor="GhostWhite" Margin="20,10,0,0" WidthRequest="700"
                             Text="C02.2,C02.3,C15.3,C16.2,C16.8,C17.0,C22.8,C24.0,C24.9,C41.1,C43.52,C44.722,C49.0,C53.0,C62.90,C62.91,C62.92,C69.31,C79.2,C79.71,C79.81,C79.82,C7A.090,C81.11,C81.91,C82.05,C82.60,C84.00,C92.41,C95.00,D46.1,D46.Z,Z85.21,C04.9,C05.1,C11.1,C17.1,C25.4,C30.0,C32.2,C33,C34.00,C34.30,C37,C43.8,C44.202,C44.219,C44.229,C44.300,C44.301,C44.310,C44.520,C44.721,C46.9,C49.11,C49.A2,C50.122,C50.822,C50.921,C52,C53.1,C54.8,C63.2,C71.3,C76.1,C77.2,C79.02,C79.10,C79.72,C7A.00,C81.03,C81.04,C81.48,C81.71,C81.78,C81.98,C82.09,C82.11,C82.12,C82.15,C82.19,C84.09,C84.40,C85.13,C85.18,C85.19,C85.88,C85.91,C85.94,C86.6,C91.12,C91.50,C94.6,D46.C,Z85.828,C00.9,C02.1,C02.4,C03.0,C03.1,C03.9,C05.0,C08.0,C08.9,C10.0,C10.3,C10.8,C11.3,C16.1,C21.8,C22.7,C25.7,C25.8,C26.0,C26.9,C38.3,C40.01,C41.0,C41.2,C43.21,C43.31,C43.60,C44.111,C44.1122,C44.1192,C44.121,C44.212,C44.222,C44.399,C44.500,C44.602,C44.609,C44.621,C44.712,C44.792,C45.0,C45.9,C47.9,C49.3,C49.4,C49.6,C49.A0,C4A.31,C4A.4,C4A.62,C4A.71,C50.021,C50.121,C50.222,C50.421,C50.611,C50.829,C50.922,C51.0,C56.3,C57.00,C62.01,C62.02,C62.10,C66.1,C67.1,C67.6,C69.40,C69.60,C71.0,C74.02,C74.92,C76.3,C76.8,C78.1,C78.5,C78.89,C79.19,C79.32,C79.40,C79.62,C7A.010,C7A.024,C7A.026,C7A.098,C7B.00,C7B.02,C7B.1,C81.00,C81.01,C81.02,C81.08,C81.18,C81.21,C81.22,C81.28,C81.41,C81.74,C81.76,C81.92,C81.94,C81.97,C82.08,C82.61,C82.99,C83.01,C83.02,C83.03,C83.04,C83.08,C83.09,C83.12,C83.15,C83.34,C83.35,C83.50,C84.04,C84.05,C84.08,C84.18,C84.41,C84.70,C84.A4,C84.A8,C85.11,C85.12,C85.14,C85.15,C85.81,C85.82,C85.92,C85.93,C85.96,C86.5,C90.20,C90.31,C91.01,C91.11,C91.52,C91.90,C91.91,C92.02,C94.81,C95.90,D03.59,D04.62,D09.9,D46.A,D47.1,I31.3,Z85.028,Z85.09,Z85.3,Z85.9"/>
-                    <BoxView Color="lightSeaGreen" HeightRequest="2" HorizontalOptions="FillAndExpand" VerticalOptions="End" WidthRequest="700"/>
+                    <BoxView Color="LightGrey" HeightRequest="2" HorizontalOptions="FillAndExpand" VerticalOptions="End" WidthRequest="700"/>
                 </Grid>
             </StackLayout>
 
-            <Button x:Name="Next" Text="Next" HorizontalOptions="End" Clicked="Next_Clicked" Margin="20" BackgroundColor="LightSeaGreen" TextColor="Black" WidthRequest="90"/>
+                <Button x:Name="btnNext" Text="Next" HorizontalOptions="End" TextColor="Black" Clicked="Next_Clicked" BackgroundColor="LightBlue" CornerRadius="0" WidthRequest="90" Margin="10"/>
 
-        </VerticalStackLayout>
+            </VerticalStackLayout>
     </Frame>
     </Grid>
 </ContentPage>

@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Scrubber.SecurityConfigPage"
              Title="SecurityConfigPage"
-             BackgroundColor="LightSeaGreen">
+             BackgroundColor="AliceBlue">
 
     <NavigationPage.TitleView>
-        <StackLayout BackgroundColor="AliceBlue" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
+        <StackLayout BackgroundColor="LightSeaGreen" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
             <Image Source="drlogo.ico" HeightRequest="30" WidthRequest="30" HorizontalOptions="Start" Margin="10,0,0,0"/>
             <Label Text="Security Configuration" TextColor="Black" Margin="10,0,0,0" HorizontalOptions="StartAndExpand" VerticalOptions="CenterAndExpand" />
         </StackLayout>
@@ -18,46 +18,58 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <StackLayout Grid.Column="0" Orientation="Vertical" HorizontalOptions="Start" VerticalOptions="FillAndExpand">
-            <Button x:Name = "Location" Text="Location" Margin="10" TextColor="Black" Clicked="Location_Clicked"/>
-            <Button x:Name = "Encryption" Text="Encryption" Margin="10" TextColor="Black" />
-            <Button x:Name = "ICD10" Text="ICD-10 Codes" Margin="10" TextColor="Black" Clicked="ICD10_Clicked" BackgroundColor="LightGray"/>
-            <Button x:Name = "Files" Text="Files" Margin="10" TextColor="Black" Clicked="Files_Clicked" BackgroundColor="LightGray"/>
+        <StackLayout Grid.Column="0" Padding="10" Orientation="Vertical" WidthRequest="150"  HorizontalOptions="Start" VerticalOptions="FillAndExpand">
+            <Label Text="Location" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Location_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgEncryption" Text="Encryption" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers >
+                    <TapGestureRecognizer Tapped="Encryption_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgICD10" Text="ICD-10 Codes" Margin="0" TextColor="Black">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="ICD10_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgFiles" Text="Files" Margin="0" TextColor="Black">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Files_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
         </StackLayout>
 
-        <Frame Grid.Column="1" BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="10">
 
-        <ScrollView>
+        <Frame Grid.Column="1" BorderColor="white" Margin="5" BackgroundColor="white" CornerRadius="0">
 
-        <VerticalStackLayout Padding="20" VerticalOptions="StartAndExpand" HorizontalOptions="CenterAndExpand" >
-            
-            <Grid Grid.Row="0">
-                <Image Source="drlogo.ico" Margin="0,0,250,0"  Grid.Column="0" HorizontalOptions="Center" HeightRequest="90" WidthRequest="90" />
-                <Label Text="Scrubber" Margin="100,5,0,0" Grid.Column="1" FontAttributes="Bold" HorizontalOptions="Center" FontSize="50" TextColor="Black"/>
-            </Grid>
+            <VerticalStackLayout Padding="20" VerticalOptions="StartAndExpand" HorizontalOptions="CenterAndExpand" >
+  
 
-            <StackLayout Orientation="Horizontal" VerticalOptions="CenterAndExpand" HorizontalOptions="Start" Padding="20" Margin="0,30,100,0">
+            <StackLayout Orientation="Horizontal" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Padding="20" Margin="0,30,100,0">
                 <Label Text="Generated Key:" FontSize="13" HorizontalOptions="Center" TextColor="Black"  Margin="0,0,10,0"/>
                 <Grid>
-                    <Entry x:Name="keyTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="GhostWhite" WidthRequest="500" TextChanged="OnEntryTextChanged"/>
-                    <BoxView Color="lightSeaGreen" HeightRequest="1" HorizontalOptions="FillAndExpand" VerticalOptions="End" WidthRequest="500"/>
+                    <Entry x:Name="keyTextBox" Margin="0,-10,0,0" TextColor="Black" HorizontalOptions="Start" BackgroundColor="AliceBlue" WidthRequest="500" TextChanged="OnEntryTextChanged"/>
                 </Grid>
             </StackLayout>
 
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                <Button x:Name="generateKeyButton"  Text="Generate" Margin="10" Clicked="GenerateKey_Click" BackgroundColor="LightSeaGreen" TextColor="Black">
+            <StackLayout Orientation="Horizontal" HorizontalOptions="CenterAndExpand">
+                <Button x:Name="generateKeyButton" CornerRadius="0" Text="Generate" Margin="10" Clicked="GenerateKey_Click" BackgroundColor="LightBlue" TextColor="Black">
                     <Button.Triggers>
                         <DataTrigger TargetType="Button" Binding="{Binding Source={x:Reference generateKeyButton}, Path=IsEnabled}" Value="False">
                             <Setter Property="BackgroundColor" Value="LightGray"/>
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>
-                <Button x:Name="Next" Text="Next" Clicked="Next_Clicked" Margin="10" BackgroundColor="LightGray" TextColor="Black"  WidthRequest="90"/>
+                    <Button x:Name="btnNext" Text="Next" CornerRadius="0" Clicked="Next_Clicked" Margin="10" BackgroundColor="LightGray" TextColor="Black" WidthRequest="90"/>
             </StackLayout>
         
         </VerticalStackLayout>
             
-        </ScrollView>
     </Frame>
  </Grid>
 </ContentPage>

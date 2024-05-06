@@ -41,7 +41,7 @@ public partial class ICD_10Page : ContentPage
         }
     }
 
-    private async void Location_Clicked(object sender, EventArgs e)
+    private async void Location_Tapped(object sender, EventArgs e)
     {
         int pagesToPop = 2;
 
@@ -58,11 +58,14 @@ public partial class ICD_10Page : ContentPage
         }
         await Navigation.PopAsync();
     }
-    private async void Encryption_Clicked(object sender, EventArgs e)
+    private async void Encryption_Tapped(object sender, EventArgs e)
     {
         await Navigation.PopAsync();
     }
-    private async void Files_Clicked(object sender, EventArgs e)
+    private void ICD10_Tapped(object sender, EventArgs e)
+    {
+    }
+    private async void Files_Tapped(object sender, EventArgs e)
     {
         if (IsType835Checked)
         {

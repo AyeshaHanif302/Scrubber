@@ -2,10 +2,10 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Scrubber.File835Page"
-             BackgroundColor="LightSeaGreen">
+             BackgroundColor="AliceBlue">
 
     <NavigationPage.TitleView>
-        <StackLayout BackgroundColor="AliceBlue" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
+        <StackLayout BackgroundColor="LightSeaGreen" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Orientation="Horizontal" WidthRequest="1300">
             <Image Source="drlogo.ico" HeightRequest="30" WidthRequest="30" HorizontalOptions="Start" Margin="10,0,0,0"/>
             <Label Text="File 835" TextColor="Black" Margin="10,0,0,0" HorizontalOptions="StartAndExpand" VerticalOptions="CenterAndExpand" />
         </StackLayout>
@@ -17,24 +17,39 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <StackLayout Grid.Column="0" Orientation="Vertical" HorizontalOptions="Start" VerticalOptions="FillAndExpand">
-            <Button x:Name = "Location" Text="Location" Margin="10" TextColor="Black" Clicked="Location_Clicked"/>
-            <Button x:Name = "Encryption" Text="Encryption" Margin="10" TextColor="Black" Clicked="Encryption_Clicked"/>
-            <Button x:Name = "ICD10" Text="ICD-10 Codes" Margin="10" TextColor="Black" Clicked="ICD10_Clicked"/>
-            <Button x:Name = "Files" Text="Files" Margin="10" TextColor="Black" />
+        <StackLayout Grid.Column="0" Padding="10" Orientation="Vertical" WidthRequest="150"  HorizontalOptions="Start" VerticalOptions="FillAndExpand">
+            <Label Text="Location" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Location_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgEncryption" Text="Encryption" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers >
+                    <TapGestureRecognizer Tapped="Encryption_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgICD10" Text="ICD-10 Codes" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="ICD10_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <BoxView Color="LightGray" HeightRequest="1" HorizontalOptions="FillAndExpand" Margin="5,10" />
+            <Label x:Name="nvgFiles" Text="Files" Margin="0" TextColor="Black" BackgroundColor="AliceBlue">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Files_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
         </StackLayout>
 
-        <Frame Grid.Column="1" BorderColor="LightSeaGreen" Margin="5" BackgroundColor="AliceBlue" CornerRadius="10">
+        <Frame Grid.Column="1" BorderColor="LightGray" Margin="5" BackgroundColor="white" CornerRadius="0">
 
             <VerticalStackLayout Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand" >
 
-                <Grid Grid.Row="0">
-                    <Image Source="drlogo.ico" Margin="0,0,250,0"  Grid.Column="0" HorizontalOptions="Center" HeightRequest="80" WidthRequest="80" />
-                    <Label Text="Scrubber" Margin="100,5,0,0" Grid.Column="1" FontAttributes="Bold" HorizontalOptions="Center" FontSize="50" TextColor="Black"/>
-                </Grid>
 
                     <Label Text="Select All" TextColor="Black" Margin="0,10,70,0"  HorizontalOptions="End"/>
-                    <CheckBox x:Name="selectAll" Color="LightSeaGreen" Margin="0,-32,22,0" CheckedChanged="SelectAllCheckedChanged"  Scale="0.8"  HorizontalOptions="End"/>
+                <CheckBox x:Name="selectAll" Color="LightBlue" Margin="0,-32,22,0" CheckedChanged="SelectAllCheckedChanged"  Scale="0.8"  HorizontalOptions="End"/>
 
                 <Grid>
                     <Grid.RowDefinitions>
@@ -63,27 +78,27 @@
                     </StackLayout>
 
                     <StackLayout Orientation="Vertical" HorizontalOptions="Center" Margin="200,0,0,0" Padding="20" Grid.Row="0" Grid.Column="1">
-                        <CheckBox x:Name="patientname835" AutomationId="nameCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
-                        <CheckBox x:Name="patientpolicyId835" AutomationId="policyIdCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
-                        <CheckBox x:Name="subscriberName835" AutomationId="subscriberNameCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
-                        <CheckBox x:Name="subscriberPolicyId835" AutomationId="subscriberPolicyIdCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
-                        <CheckBox x:Name="payerName835" AutomationId="payerNameCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
-                        <CheckBox x:Name="payerAddress835" AutomationId="payerAddressCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
-                        <CheckBox x:Name="medicalRecordNo835" AutomationId="medicalRecordNoCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
-                        <CheckBox x:Name="correctedInsuredName835" AutomationId="correctedInsuredNameCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
-                        <CheckBox x:Name="correctedInsuredPolicyId835" AutomationId="correctedInsuredPolicyIdCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
-                        <CheckBox x:Name="renderingProviderName835" AutomationId="renderingProviderNameCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
-                        <CheckBox x:Name="renderingProviderPolicyId835" AutomationId="renderingProviderPolicyIdCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
-                        <CheckBox x:Name="serviceLineItemControlNo835" AutomationId="serviceLineItemControlNoCheckBox" Color="LightSeaGreen" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
+                        <CheckBox x:Name="patientname835" AutomationId="nameCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
+                        <CheckBox x:Name="patientpolicyId835" AutomationId="policyIdCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
+                        <CheckBox x:Name="subscriberName835" AutomationId="subscriberNameCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
+                        <CheckBox x:Name="subscriberPolicyId835" AutomationId="subscriberPolicyIdCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
+                        <CheckBox x:Name="payerName835" AutomationId="payerNameCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
+                        <CheckBox x:Name="payerAddress835" AutomationId="payerAddressCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
+                        <CheckBox x:Name="medicalRecordNo835" AutomationId="medicalRecordNoCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
+                        <CheckBox x:Name="correctedInsuredName835" AutomationId="correctedInsuredNameCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
+                        <CheckBox x:Name="correctedInsuredPolicyId835" AutomationId="correctedInsuredPolicyIdCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
+                        <CheckBox x:Name="renderingProviderName835" AutomationId="renderingProviderNameCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
+                        <CheckBox x:Name="renderingProviderPolicyId835" AutomationId="renderingProviderPolicyIdCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-7" Scale="0.8"/>
+                        <CheckBox x:Name="serviceLineItemControlNo835" AutomationId="serviceLineItemControlNoCheckBox" Color="LightBlue" CheckedChanged="OnCheckBoxCheckedChanged" Margin="0,-8" Scale="0.8"/>
                     </StackLayout>
 
                 </Grid>
 
                 <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Padding="5">
-                    <Button Text="Encrypt File" Clicked="Encrypt_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
-                    <Button Text="Decrypt File" Clicked="Decrypt_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
-                    <Button Text="Download File" Clicked="Download_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
-                    <Button Text="Clear" Clicked="ClearAll_Clicked" Margin="10" BackgroundColor="LightSeaGreen" TextColor="Black"/>
+                    <Button Text="Encrypt File" Clicked="Encrypt_Clicked" Margin="10" BackgroundColor="LightBlue" CornerRadius="0" TextColor="Black"/>
+                    <Button Text="Decrypt File" Clicked="Decrypt_Clicked" Margin="10" BackgroundColor="LightBlue" CornerRadius="0" TextColor="Black"/>
+                    <Button Text="Download File" Clicked="Download_Clicked" Margin="10" BackgroundColor="LightBlue" CornerRadius="0" TextColor="Black"/>
+                    <Button x:Name="btnclear" Text="Clear All" TextColor="Black" Clicked="ClearAll_Clicked" BackgroundColor="LightBlue" Margin="10" CornerRadius="0"/>
                 </StackLayout>
                 
             </VerticalStackLayout>

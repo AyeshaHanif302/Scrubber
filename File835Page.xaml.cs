@@ -14,6 +14,7 @@ public partial class File835Page : ContentPage
     private List<string> SelectedFiles;
     private string SelectedFolderPath;
     private List<byte[]> EncryptedFiles;
+    private byte[] encryptedSignature = Encoding.UTF8.GetBytes("ENCRYPTED_File");
 
     public File835Page(List<string> selectedFile, List<byte[]> encryptedBytes, string selectedFolderPath)
 	{
@@ -26,6 +27,47 @@ public partial class File835Page : ContentPage
     }
 
     #region Encryption
+    //private async void Encrypt_Clicked(object sender, EventArgs e)
+    //{
+    //    try
+    //    {
+    //        if (EncryptedBytes != null && EncryptedBytes.Count > 0)
+    //        {
+    //            EncryptedFiles.Clear();
+
+    //            int skippedFilesCount = 0;
+
+    //            foreach (var fileBytes in EncryptedBytes)
+    //            {
+    //                var encryptedFileBytes = await EncryptFiles(fileBytes);
+    //                if (encryptedFileBytes != null)
+    //                {
+    //                    EncryptedFiles.Add(encryptedFileBytes);
+    //                }
+    //                else
+    //                {
+    //                    skippedFilesCount++;
+    //                }
+    //            }
+
+    //            if (skippedFilesCount > 0)
+    //            {
+    //                await DisplayAlert("Info", $"{skippedFilesCount} file(s) already encrypted and skipped.", "Ok");
+    //            }
+
+    //            isEncrypted = true;
+    //            await DisplayAlert("Info", "Files Encrypted", "Ok");
+    //        }
+    //        else
+    //        {
+    //            await DisplayAlert("Info", "No file selected to encrypt", "Ok");
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        await DisplayAlert("Error", ex.Message, "Ok");
+    //    }
+    //}
     private async void Encrypt_Clicked(object sender, EventArgs e)
     {
         try
@@ -34,14 +76,37 @@ public partial class File835Page : ContentPage
             {
                 EncryptedFiles.Clear();
 
+                int skippedFilesCount = 0;
+
                 foreach (var fileBytes in EncryptedBytes)
                 {
-                     var encryptedFileBytes = await EncryptFiles(fileBytes);
-                    EncryptedFiles.Add(encryptedFileBytes);
+                    if (IsAlreadyEncrypted(fileBytes))
+                    {
+                        skippedFilesCount++;
+                        continue; 
+                    }
+
+                    var encryptedFileBytes = await EncryptFiles(fileBytes);
+                    if (encryptedFileBytes != null)
+                    {
+                        EncryptedFiles.Add(encryptedFileBytes);
+                    }
+                    else
+                    {
+                        skippedFilesCount++;
+                    }
                 }
 
-                isEncrypted = true;
-                await DisplayAlert("Info", "Files Encrypted", "Ok");
+                if (skippedFilesCount > 0)
+                {
+                    await DisplayAlert("Info", $"{skippedFilesCount} file(s) already encrypted and skipped.", "Ok");
+                }
+                else
+                {
+                    isEncrypted = true;
+                    await DisplayAlert("Info", "Files Encrypted", "Ok");
+                }
+               
             }
             else
             {
@@ -53,6 +118,7 @@ public partial class File835Page : ContentPage
             await DisplayAlert("Error", ex.Message, "Ok");
         }
     }
+
     private string EncryptText(string value)
     {
         // Get bytes of plaintext string
@@ -87,10 +153,12 @@ public partial class File835Page : ContentPage
     {
         try
         {
-            string fileContent = Encoding.UTF8.GetString(fileBytes);
             var message = string.Empty;
             var finalLines = new List<string>();
             var processedFiles = new List<byte[]>();
+            string fileContent = Encoding.UTF8.GetString(fileBytes);
+
+           
 
             string[] lines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
@@ -463,12 +531,11 @@ public partial class File835Page : ContentPage
                 {
                     // Write encrypted content to file
                     string combinedLines = string.Join(Environment.NewLine, finalLines);
-                    byte[] combinedBytesToFile = Encoding.UTF8.GetBytes(combinedLines);
+                    byte[] combinedBytesToFile = Encoding.UTF8.GetBytes($"ENCRYPTED{Environment.NewLine}{combinedLines}");
+                    //byte[] combinedBytesToFile = Encoding.UTF8.GetBytes(combinedLines);
 
-                    // Return the combined content of all processed files
                     return combinedBytesToFile;
                 }
-
             }
             return null;
         }
@@ -478,10 +545,60 @@ public partial class File835Page : ContentPage
             return null;
         }
     }
+    private bool IsAlreadyEncrypted(byte[] fileBytes)
+    {
+        try
+        {
+            string fileContent = Encoding.UTF8.GetString(fileBytes);
+
+            if (fileContent.StartsWith("ENCRYPTED"))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error while checking if file is already encrypted: " + ex.Message);
+            return false;
+        }
+    }
+
 
     #endregion
 
     #region Decryption
+    //private async void Decrypt_Clicked(object sender, EventArgs e)
+    //{
+    //    try
+    //    {
+    //        if (EncryptedBytes != null && EncryptedBytes.Count > 0)
+    //        {
+    //            EncryptedFiles.Clear();
+
+    //            foreach (var fileBytes in EncryptedBytes)
+    //            {
+    //                var encryptedFileBytes = await DecryptFiles(fileBytes);
+    //                EncryptedFiles.Add(encryptedFileBytes);
+    //            }
+
+    //            isEncrypted = false;
+
+    //            await DisplayAlert("Info", "Files Decrypted", "Ok");
+    //        }
+    //        else
+    //        {
+    //            await DisplayAlert("Info", "No file selected to decrypt", "Ok");
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        await DisplayAlert("Error", ex.Message, "Ok");
+    //    }
+    //}
     private async void Decrypt_Clicked(object sender, EventArgs e)
     {
         try
@@ -492,8 +609,11 @@ public partial class File835Page : ContentPage
 
                 foreach (var fileBytes in EncryptedBytes)
                 {
-                    var encryptedFileBytes = await DecryptFiles(fileBytes);
-                    EncryptedFiles.Add(encryptedFileBytes);
+                    byte[] decryptedFileBytes = await RemoveEncryptedMarker(fileBytes);
+
+                    var decryptedContent = await DecryptFiles(decryptedFileBytes);
+
+                    EncryptedFiles.Add(decryptedContent);
                 }
 
                 isEncrypted = false;
@@ -938,6 +1058,31 @@ public partial class File835Page : ContentPage
             return null; // or throw an exception or handle the error according to your application's logic
         }
     }
+    private Task<byte[]> RemoveEncryptedMarker(byte[] fileBytes)
+    {
+        try
+        {
+            string fileContent = Encoding.UTF8.GetString(fileBytes);
+
+            if (fileContent.Contains("ENCRYPTED"))
+            {
+                fileContent = fileContent.Replace("ENCRYPTED", "");
+
+                byte[] modifiedFileBytes = Encoding.UTF8.GetBytes(fileContent);
+
+                return Task.FromResult(modifiedFileBytes);
+            }
+            else
+            {
+                return Task.FromResult(fileBytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error during removing encrypted marker: " + ex.Message);
+            return Task.FromResult<byte[]>(null);
+        }
+    }
 
     #endregion
 
@@ -1104,13 +1249,15 @@ public partial class File835Page : ContentPage
     #endregion
 
     #region Navigation
-    private async void Location_Clicked(object sender, EventArgs e)
+
+
+    private async void Location_Tapped(object sender, EventArgs e)
     {
         int pagesToPop = 3;
 
         for (int counter = 1; counter < pagesToPop; counter++)
         {
-            if (Navigation.NavigationStack.Count > 1) 
+            if (Navigation.NavigationStack.Count > 1)
             {
                 Navigation.RemovePage(Navigation.NavigationStack[Navigation.NavigationStack.Count - 2]);
             }
@@ -1121,7 +1268,7 @@ public partial class File835Page : ContentPage
         }
         await Navigation.PopAsync();
     }
-    private async void Encryption_Clicked(object sender, EventArgs e)
+    private async void Encryption_Tapped(object sender, EventArgs e)
     {
         int pagesToPop = 2;
 
@@ -1138,9 +1285,13 @@ public partial class File835Page : ContentPage
         }
         await Navigation.PopAsync();
     }
-    private async void ICD10_Clicked(object sender, EventArgs e)
+    private async void ICD10_Tapped(object sender, EventArgs e)
     {
         await Navigation.PopAsync();
+    }
+    private void Files_Tapped(object sender, EventArgs e)
+    {
+       
     }
 
     #endregion

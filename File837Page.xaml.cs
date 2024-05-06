@@ -36,14 +36,37 @@ public partial class File837Page : ContentPage
             {
                 EncryptedFiles.Clear();
 
+                int skippedFilesCount = 0;
+
                 foreach (var fileBytes in EncryptedBytes)
                 {
+                    if (IsAlreadyEncrypted(fileBytes))
+                    {
+                        skippedFilesCount++;
+                        continue;
+                    }
+
                     var encryptedFileBytes = await EncryptFiles(fileBytes);
-                    EncryptedFiles.Add(encryptedFileBytes);
+                    if (encryptedFileBytes != null)
+                    {
+                        EncryptedFiles.Add(encryptedFileBytes);
+                    }
+                    else
+                    {
+                        skippedFilesCount++;
+                    }
                 }
 
-                isEncrypted = true;
-                await DisplayAlert("Info", "Files Encrypted", "Ok");
+                if (skippedFilesCount > 0)
+                {
+                    await DisplayAlert("Info", $"{skippedFilesCount} file(s) already encrypted and skipped.", "Ok");
+                }
+                else
+                {
+                    isEncrypted = true;
+                    await DisplayAlert("Info", "Files Encrypted", "Ok");
+                }
+
             }
             else
             {
@@ -924,7 +947,8 @@ public partial class File837Page : ContentPage
                 if (finalLines.Count > 0)
                 {
                     string combinedLines = string.Join(Environment.NewLine, finalLines);
-                    byte[] combinedBytesToFile = Encoding.UTF8.GetBytes(combinedLines);
+                    byte[] combinedBytesToFile = Encoding.UTF8.GetBytes($"ENCRYPTED{Environment.NewLine}{combinedLines}");
+
                     return combinedBytesToFile;
                 }
 
@@ -1308,6 +1332,27 @@ public partial class File837Page : ContentPage
 
         return $"{rand1}{part1}{part2}{rand2}";
     }
+    private bool IsAlreadyEncrypted(byte[] fileBytes)
+    {
+        try
+        {
+            string fileContent = Encoding.UTF8.GetString(fileBytes);
+
+            if (fileContent.StartsWith("ENCRYPTED"))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error while checking if file is already encrypted: " + ex.Message);
+            return false;
+        }
+    }
 
     #endregion
 
@@ -1322,8 +1367,11 @@ public partial class File837Page : ContentPage
 
                 foreach (var fileBytes in EncryptedBytes)
                 {
-                    var encryptedFileBytes = await DecryptFiles(fileBytes);
-                    EncryptedFiles.Add(encryptedFileBytes);
+                    byte[] decryptedFileBytes = await RemoveEncryptedMarker(fileBytes);
+
+                    var decryptedContent = await DecryptFiles(decryptedFileBytes);
+
+                    EncryptedFiles.Add(decryptedContent);
                 }
 
                 isEncrypted = false;
@@ -2247,6 +2295,31 @@ public partial class File837Page : ContentPage
             return null;
         }
     }
+    private Task<byte[]> RemoveEncryptedMarker(byte[] fileBytes)
+    {
+        try
+        {
+            string fileContent = Encoding.UTF8.GetString(fileBytes);
+
+            if (fileContent.Contains("ENCRYPTED"))
+            {
+                fileContent = fileContent.Replace("ENCRYPTED", "");
+
+                byte[] modifiedFileBytes = Encoding.UTF8.GetBytes(fileContent);
+
+                return Task.FromResult(modifiedFileBytes);
+            }
+            else
+            {
+                return Task.FromResult(fileBytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error during removing encrypted marker: " + ex.Message);
+            return Task.FromResult<byte[]>(null);
+        }
+    }
 
     #endregion
 
@@ -2415,7 +2488,7 @@ public partial class File837Page : ContentPage
     #endregion
 
     #region Navigation
-    private async void Location_Clicked(object sender, EventArgs e)
+    private async void Location_Tapped(object sender, EventArgs e)
     {
         int pagesToPop = 3;
 
@@ -2432,7 +2505,7 @@ public partial class File837Page : ContentPage
         }
         await Navigation.PopAsync();
     }
-    private async void Encryption_Clicked(object sender, EventArgs e)
+    private async void Encryption_Tapped(object sender, EventArgs e)
     {
         int pagesToPop = 2;
 
@@ -2449,9 +2522,13 @@ public partial class File837Page : ContentPage
         }
         await Navigation.PopAsync();
     }
-    private async void ICD10_Clicked(object sender, EventArgs e)
+    private async void ICD10_Tapped(object sender, EventArgs e)
     {
         await Navigation.PopAsync();
+    }
+    private void Files_Tapped(object sender, EventArgs e)
+    {
+
     }
 
     #endregion

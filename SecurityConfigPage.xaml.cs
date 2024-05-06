@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Scrubber;
 
@@ -19,7 +20,7 @@ public partial class SecurityConfigPage : ContentPage
         IsType835Checked = is835;
         IsType837Checked = is837;
         IsTypebothChecked = isboth;
-        Next.IsEnabled = false;
+        btnNext.IsEnabled = false;
 
         string savedKey = Preferences.Get("EncryptionKey", string.Empty);
         if (string.IsNullOrEmpty(savedKey))
@@ -37,37 +38,32 @@ public partial class SecurityConfigPage : ContentPage
     #region Navigation
     private void OnEntryTextChanged(object sender, TextChangedEventArgs e)
     {
-        Next.IsEnabled = !string.IsNullOrWhiteSpace(keyTextBox.Text);
-        Next.BackgroundColor = Next.IsEnabled ? Color.FromRgba(32, 178, 170, 255) : Color.FromRgb(211, 211, 211);
+        btnNext.IsEnabled = !string.IsNullOrWhiteSpace(keyTextBox.Text);
+        btnNext.BackgroundColor = btnNext.IsEnabled ? Color.FromRgb(173, 216, 230) : Color.FromRgb(211, 211, 211);
 
-        ICD10.IsEnabled = !string.IsNullOrWhiteSpace(keyTextBox.Text);
-        ICD10.BackgroundColor = Next.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
+        nvgICD10.IsEnabled = !string.IsNullOrWhiteSpace(keyTextBox.Text);
+        nvgICD10.BackgroundColor = nvgICD10.IsEnabled ? Color.FromRgb(240, 248, 255) : Color.FromRgb(211, 211, 211);
 
-        if(ICD10.IsEnabled == true)
-            Files.BackgroundColor = Files.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
-
+        nvgFiles.IsEnabled = nvgICD10.IsEnabled;
+        nvgFiles.BackgroundColor = nvgFiles.IsEnabled ? Color.FromRgb(240, 248, 255) : Color.FromRgb(211, 211, 211);
     }
     private async void Next_Clicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new ICD_10Page(SelectedFile, EncryptedContent, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
     }
 
-    private async void Location_Clicked(object sender, EventArgs e)
+    private async void Location_Tapped(object sender, EventArgs e)
     {
-        if (Navigation.NavigationStack[Navigation.NavigationStack.Count - 2] is MainPage)
-        {
-            await Navigation.PopAsync();
-        }
-        else
-        {
-            await Navigation.PushAsync(new MainPage());
-        }
+        await Navigation.PopAsync();
     }
-    private async void ICD10_Clicked(object sender, EventArgs e)
+    private async void Encryption_Tapped(object sender, EventArgs e)
+    {
+    }
+    private async void ICD10_Tapped(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new ICD_10Page(SelectedFile, EncryptedContent, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
     }
-    private async void Files_Clicked(object sender, EventArgs e)
+    private async void Files_Tapped(object sender, EventArgs e)
     {
         if (IsType835Checked)
         {

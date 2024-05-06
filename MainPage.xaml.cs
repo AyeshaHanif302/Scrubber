@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Maui.Storage;
+using System.IO;
+
 
 namespace Scrubber
 {
@@ -14,10 +16,12 @@ namespace Scrubber
         static bool IsType835Checked;
         static bool IsType837Checked;
         static bool IsTypebothChecked;
+
+
         public MainPage()
         {
             InitializeComponent();
-            Next.IsEnabled = false;
+            btnNext.IsEnabled = false;
             type835.IsChecked = true;
             Browse.TextChanged += OnEntryTextChanged;
             Destination.TextChanged += OnEntryTextChanged;
@@ -27,17 +31,32 @@ namespace Scrubber
         #region Navigation and Checkbox Handler
         private void OnEntryTextChanged(object sender, TextChangedEventArgs e)
         {
-            Next.IsEnabled = !string.IsNullOrWhiteSpace(Browse.Text) && !string.IsNullOrWhiteSpace(Destination.Text);
-            Next.BackgroundColor = Next.IsEnabled ? Color.FromRgba(32, 178, 170, 255) : Color.FromRgb(211, 211, 211);
+            btnNext.IsEnabled = !string.IsNullOrWhiteSpace(Browse.Text) && !string.IsNullOrWhiteSpace(Destination.Text);
+            btnNext.BackgroundColor = btnNext.IsEnabled ? Color.FromRgb(173, 216, 230) : Color.FromRgb(211, 211, 211);
 
-            Encryption.IsEnabled = !string.IsNullOrWhiteSpace(Browse.Text) && !string.IsNullOrWhiteSpace(Destination.Text);
-            Encryption.BackgroundColor = Encryption.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
+            nvgEncryption.IsEnabled = !string.IsNullOrWhiteSpace(Browse.Text) && !string.IsNullOrWhiteSpace(Destination.Text);
+            //nvgEncryption.BackgroundColor = nvgEncryption.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
 
-            if ( Encryption.IsEnabled == true)
+            if (nvgEncryption.IsEnabled == true)
             {
-                ICD10.BackgroundColor = ICD10.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
+                nvgICD10.BackgroundColor = nvgICD10.IsEnabled ? Color.FromRgba(240, 248, 255, 255) : Color.FromRgb(211, 211, 211);
             }
-            
+
+        }
+
+        private async void Encryption_Tapped(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
+        }
+
+        private async void ICD10_Tapped(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new ICD_10Page(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
+        }
+
+        private async void Files_Tapped(object sender, EventArgs e)
+        {
+
         }
         private void OnRadioButtonChecked(object sender, CheckedChangedEventArgs e)
         {
@@ -56,6 +75,7 @@ namespace Scrubber
         }
         private void Clear_Clicked(object sender, EventArgs e)
         {
+            //btnclear.BackgroundColor = darkerBlue;
             Destination.Text = string.Empty;
             Browse.Text = string.Empty;
             type835.IsChecked = true;
@@ -64,19 +84,6 @@ namespace Scrubber
         private async void Next_Clicked(object sender, EventArgs e)
         {
             await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
-        }
-
-        private async void Encryption_Clicked(object sender, EventArgs e)
-        {
-            await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
-        }
-        private async void ICD10_Clicked(object sender, EventArgs e)
-        {
-            await Navigation.PushAsync(new ICD_10Page(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
-        }
-        private void Files_Clicked(object sender, EventArgs e)
-        {
-            
         }
 
         #endregion
@@ -118,7 +125,8 @@ namespace Scrubber
                         }
                     }
 
-                    Browse.Text = string.Join(", ", SelectedFiles);
+                    Browse.Text = $"{SelectedFiles.Count} file(s) selected";
+                    //Browse.Text = string.Join(", ", SelectedFiles);
                 }
             }
             catch (Exception ex)
