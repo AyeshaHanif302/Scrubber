@@ -83,7 +83,10 @@ namespace Scrubber
         }
         private async void Next_Clicked(object sender, EventArgs e)
         {
+            Destination.Text = string.Empty;
+            Browse.Text = string.Empty;
             await Navigation.PushAsync(new SecurityConfigPage(SelectedFiles, EncryptedContents, SelectedFolderPath, IsType835Checked, IsType837Checked, IsTypebothChecked));
+           
         }
 
         #endregion
